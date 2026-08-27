@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head></head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Minimal</title>
+</head>
+
+<body>
+    <main>
+        <h1>Minimal</h1>
+        <p id="date-display"></p>
+        <p id="time-display"></p>
+        <p>Focus on what matters.</p>
+        
+
+        <section>
+            <h2>Today</h2>
+            <form id="priority-form">
+                <input id="priority-input" type="text" placeholder="What matters most?">
+                <button type="submit">Add</button>
+            </form>
+
+        <p id="priority-display"></p>
+        <button id="clear-button" type="button">Clear priority</button>
+        </section>
+        <section>
+    <h2>Checklist</h2>
+
+    <form id="task-form">
+        <input id="task-input" type="text" placeholder="Add a task">
+        <button type="submit">Add task</button>
+    </form>
+
+    <ul id="task-list"></ul>
+    <button id="clear-tasks-button" type="button">Clear checklist</button>
+</section>
+<section>
+    <h2>Focus</h2>
+    <p id="timer-display">25:00</p>
+    <button id="start-timer-button" type="button">Start</button>
+    <button id="reset-timer-button" type="button">Reset</button>
+</section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
