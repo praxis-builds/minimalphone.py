@@ -1,25 +1,47 @@
 {
-    "name": "Minimal",
-    "short_name": "Minimal",
-    "description": "A minimal dashboard for priorities, tasks, and focused work.",
     "id": "./",
+    "name": "Minimal Phone",
+    "short_name": "Minimal",
+    "description": "A private, low-stimulation launcher for an intentional iPhone.",
+    "lang": "en",
     "start_url": "./",
     "scope": "./",
     "display": "standalone",
+    "display_override": ["standalone", "minimal-ui"],
+    "orientation": "portrait-primary",
     "background_color": "#000000",
     "theme_color": "#000000",
-    "orientation": "portrait-primary",
-    "lang": "en-CA",
-    "categories": [
-        "productivity",
-        "utilities"
-    ],
+    "categories": ["productivity", "utilities", "lifestyle"],
     "icons": [
+        {
+            "src": "./icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "./icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
         {
             "src": "./icon.svg",
             "sizes": "any",
             "type": "image/svg+xml",
-            "purpose": "any maskable"
+            "purpose": "any"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Open Today",
+            "short_name": "Today",
+            "url": "./?view=tasks"
+        },
+        {
+            "name": "Start Focus",
+            "short_name": "Focus",
+            "url": "./?view=focus"
         }
     ]
 }

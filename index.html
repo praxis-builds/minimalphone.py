@@ -1,80 +1,311 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" data-accent="mono">
 <head>
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    >
-
-    <meta
-        name="description"
-        content="A minimal dashboard for priorities, tasks, and focused work."
-    >
-
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="A private, low-stimulation launcher for an intentional iPhone.">
     <meta name="theme-color" content="#000000">
+    <meta name="referrer" content="no-referrer">
+    <meta name="format-detection" content="telephone=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Minimal">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
 
-    <meta
-        http-equiv="Content-Security-Policy"
-        content="
-            default-src 'self';
-            script-src 'self';
-            style-src 'self';
-            img-src 'self' data:;
-            connect-src 'self';
-            worker-src 'self';
-            object-src 'none';
-            base-uri 'self';
-            form-action 'self';
-        "
-    >
+    <title>Minimal Phone</title>
 
-    <title>Minimal</title>
-
-    <link rel="manifest" href="./manifest.webmanifest">
-    <link rel="icon" href="./icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="./style.css">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <main>
-        <h1>Minimal</h1>
-        <p id="date-display"></p>
-        <p id="time-display"></p>
-        <p>Focus on what matters.</p>
-        
+    <div class="app-shell">
+        <header class="topbar">
+            <button class="wordmark" type="button" data-go="home" aria-label="Open home">MINIMAL</button>
+            <span id="connection-status" class="connection-status" aria-live="polite">
+                <span class="status-dot" aria-hidden="true"></span>
+                <span id="connection-label">LOCAL</span>
+            </span>
+        </header>
 
-        <section>
-            <h2>Today</h2>
-            <form id="priority-form">
-                <input id="priority-input" type="text" placeholder="What matters most?">
-                <button type="submit">Add</button>
-            </form>
+        <main id="main-content">
+            <section id="view-home" class="view is-active" data-view="home" aria-labelledby="home-heading">
+                <h1 id="home-heading" class="sr-only">Minimal home</h1>
 
-        <p id="priority-display"></p>
-        <button id="clear-button" type="button">Clear priority</button>
+                <div class="clock-block">
+                    <p id="date-display" class="eyebrow">—</p>
+                    <p id="time-display" class="time-display">—:—</p>
+                    <p id="greeting-display" class="greeting-display">Move with intention.</p>
+                </div>
+
+                <section class="intention-card" aria-labelledby="intention-heading">
+                    <div class="section-heading compact-heading">
+                        <div>
+                            <p class="eyebrow">ONE THING</p>
+                            <h2 id="intention-heading">Today’s intention</h2>
+                        </div>
+                        <button id="clear-priority-button" class="text-button" type="button">Clear</button>
+                    </div>
+
+                    <p id="priority-display" class="priority-display">Choose what matters most.</p>
+
+                    <form id="priority-form" class="inline-form" autocomplete="off">
+                        <label class="sr-only" for="priority-input">Today’s intention</label>
+                        <input id="priority-input" name="priority" type="text" maxlength="120" placeholder="What matters most?" required>
+                        <button class="primary-button small-button" type="submit">Set</button>
+                    </form>
+                </section>
+
+                <section class="launcher-section" aria-labelledby="launcher-heading">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">ESSENTIALS</p>
+                            <h2 id="launcher-heading">Open deliberately</h2>
+                        </div>
+                        <button id="edit-apps-button" class="text-button" type="button">Edit</button>
+                    </div>
+
+                    <div id="launcher-list" class="launcher-list" aria-live="polite"></div>
+                    <p id="empty-launcher" class="empty-state" hidden>No apps selected. Add essentials in Setup.</p>
+                </section>
+
+                <section class="daily-summary" aria-label="Daily summary">
+                    <button class="summary-item" type="button" data-go="tasks">
+                        <span id="home-task-count" class="summary-number">0</span>
+                        <span class="summary-label">remaining</span>
+                    </button>
+                    <span class="summary-divider" aria-hidden="true"></span>
+                    <button class="summary-item" type="button" data-go="focus">
+                        <span id="home-session-count" class="summary-number">0</span>
+                        <span class="summary-label">sessions</span>
+                    </button>
+                </section>
+            </section>
+
+            <section id="view-tasks" class="view" data-view="tasks" aria-labelledby="tasks-heading" hidden>
+                <div class="page-heading">
+                    <p class="eyebrow">CLEAR THE NOISE</p>
+                    <h1 id="tasks-heading">Today</h1>
+                    <p class="page-description">Keep no more than ten active commitments.</p>
+                </div>
+
+                <form id="task-form" class="stack-form" autocomplete="off">
+                    <label for="task-input">Add a commitment</label>
+                    <div class="inline-form">
+                        <input id="task-input" name="task" type="text" maxlength="140" placeholder="One clear action" required>
+                        <button class="primary-button small-button" type="submit">Add</button>
+                    </div>
+                </form>
+
+                <div class="list-meta">
+                    <span id="task-count-label">0 of 10</span>
+                    <button id="clear-completed-button" class="text-button" type="button">Clear completed</button>
+                </div>
+
+                <ul id="task-list" class="task-list" aria-live="polite"></ul>
+                <p id="empty-tasks" class="empty-state">Nothing is pulling at you.</p>
+            </section>
+
+            <section id="view-focus" class="view" data-view="focus" aria-labelledby="focus-heading" hidden>
+                <div class="page-heading centered-heading">
+                    <p class="eyebrow">SINGLE TASK</p>
+                    <h1 id="focus-heading">Focus</h1>
+                    <p id="focus-intention" class="page-description">Choose an intention on Home.</p>
+                </div>
+
+                <div id="timer-ring" class="timer-ring" aria-label="Focus timer progress">
+                    <div class="timer-center">
+                        <p id="timer-display" class="timer-display" aria-live="polite">25:00</p>
+                        <p id="timer-status" class="timer-status">Ready</p>
+                    </div>
+                </div>
+
+                <div class="preset-row" aria-label="Timer presets">
+                    <button class="preset-button is-active" type="button" data-minutes="25">25 focus</button>
+                    <button class="preset-button" type="button" data-minutes="5">5 reset</button>
+                    <button class="preset-button" type="button" data-minutes="50">50 deep</button>
+                </div>
+
+                <div class="timer-actions">
+                    <button id="start-timer-button" class="primary-button" type="button">Start</button>
+                    <button id="reset-timer-button" class="secondary-button" type="button">Reset</button>
+                </div>
+
+                <p class="quiet-note">The timer remains accurate after switching apps or locking your phone.</p>
+            </section>
+
+            <section id="view-settings" class="view" data-view="settings" aria-labelledby="settings-heading" hidden>
+                <div class="page-heading">
+                    <p class="eyebrow">YOUR DEVICE</p>
+                    <h1 id="settings-heading">Setup</h1>
+                    <p class="page-description">Choose what deserves a place on your phone.</p>
+                </div>
+
+                <section class="settings-card" aria-labelledby="identity-heading">
+                    <h2 id="identity-heading">Experience</h2>
+                    <form id="profile-form" class="stack-form">
+                        <label for="name-input">Your name <span class="label-note">optional</span></label>
+                        <input id="name-input" name="name" type="text" maxlength="32" placeholder="PRAXIS">
+
+                        <label for="clock-format-select">Clock</label>
+                        <select id="clock-format-select" name="clockFormat">
+                            <option value="12">12-hour</option>
+                            <option value="24">24-hour</option>
+                        </select>
+
+                        <label class="toggle-row" for="show-seconds-input">
+                            <span>
+                                <strong>Show seconds</strong>
+                                <small>Keep them hidden for a calmer clock.</small>
+                            </span>
+                            <input id="show-seconds-input" name="showSeconds" type="checkbox">
+                        </label>
+
+                        <label for="accent-select">Accent</label>
+                        <select id="accent-select" name="accent">
+                            <option value="mono">Monochrome</option>
+                            <option value="sage">Sage</option>
+                            <option value="amber">Amber</option>
+                            <option value="ice">Ice</option>
+                        </select>
+
+                        <button class="primary-button" type="submit">Save experience</button>
+                    </form>
+                </section>
+
+                <section id="app-settings" class="settings-card" aria-labelledby="apps-heading">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">MAXIMUM 12</p>
+                            <h2 id="apps-heading">Essential apps</h2>
+                        </div>
+                        <span id="app-count-label" class="meta-count">0 / 12</span>
+                    </div>
+
+                    <p class="settings-copy">Use an HTTPS link, an iPhone URL such as <code>sms:</code>, or a Shortcut link.</p>
+
+                    <form id="app-form" class="stack-form" autocomplete="off">
+                        <div class="two-column-fields">
+                            <div>
+                                <label for="app-name-input">Name</label>
+                                <input id="app-name-input" name="appName" type="text" maxlength="24" placeholder="Spotify" required>
+                            </div>
+                            <div>
+                                <label for="app-symbol-input">Mark</label>
+                                <input id="app-symbol-input" name="appSymbol" type="text" maxlength="2" placeholder="S">
+                            </div>
+                        </div>
+
+                        <label for="app-target-input">App or Shortcut link</label>
+                        <input id="app-target-input" name="appTarget" type="text" maxlength="500" inputmode="url" placeholder="https://open.spotify.com/" required>
+
+                        <label class="toggle-row" for="app-mindful-input">
+                            <span>
+                                <strong>Intentional pause</strong>
+                                <small>Wait five seconds before this app opens.</small>
+                            </span>
+                            <input id="app-mindful-input" name="appMindful" type="checkbox">
+                        </label>
+
+                        <button class="primary-button" type="submit">Add app</button>
+                    </form>
+
+                    <details class="shortcut-help">
+                        <summary>Open any iPhone app with Shortcuts</summary>
+                        <ol>
+                            <li>In Shortcuts, create one named <strong>Open Spotify</strong>.</li>
+                            <li>Add the <strong>Open App</strong> action and select Spotify.</li>
+                            <li>Use this link here: <code>shortcuts://run-shortcut?name=Open%20Spotify</code></li>
+                        </ol>
+                    </details>
+
+                    <div id="app-settings-list" class="app-settings-list"></div>
+                    <button id="restore-apps-button" class="secondary-button full-width" type="button">Restore starter apps</button>
+                </section>
+
+                <section class="settings-card" aria-labelledby="focus-settings-heading">
+                    <h2 id="focus-settings-heading">Custom timer</h2>
+                    <form id="custom-timer-form" class="inline-form">
+                        <label class="sr-only" for="custom-minutes-input">Custom minutes</label>
+                        <input id="custom-minutes-input" name="minutes" type="number" min="1" max="180" inputmode="numeric" placeholder="Minutes" required>
+                        <button class="primary-button small-button" type="submit">Set</button>
+                    </form>
+                </section>
+
+                <section class="settings-card" aria-labelledby="data-heading">
+                    <h2 id="data-heading">Your data</h2>
+                    <p class="settings-copy">Everything stays in this browser on this device. There is no account, server, analytics, or cloud database.</p>
+                    <div class="button-stack">
+                        <button id="export-button" class="secondary-button" type="button">Export backup</button>
+                        <button id="import-button" class="secondary-button" type="button">Import backup</button>
+                        <button id="reset-all-button" class="danger-button" type="button">Erase local data</button>
+                    </div>
+                    <input id="import-input" type="file" accept="application/json,.json" hidden>
+                </section>
+
+                <section class="settings-card install-card" aria-labelledby="install-heading">
+                    <h2 id="install-heading">Installation</h2>
+                    <p id="install-status" class="settings-copy">Checking display mode…</p>
+                    <p class="settings-copy">For the strongest effect, give Minimal its own iPhone Focus page and hide every other Home Screen page while that Focus is active.</p>
+                </section>
+
+                <footer class="app-footer">Minimal Phone · private by design · beta 2.0</footer>
+            </section>
+        </main>
+
+        <nav class="bottom-nav" aria-label="Primary navigation">
+            <button class="nav-button is-active" type="button" data-go="home" aria-current="page">
+                <span class="nav-mark" aria-hidden="true">○</span>
+                <span>Home</span>
+            </button>
+            <button class="nav-button" type="button" data-go="tasks">
+                <span class="nav-mark" aria-hidden="true">✓</span>
+                <span>List</span>
+            </button>
+            <button class="nav-button" type="button" data-go="focus">
+                <span class="nav-mark" aria-hidden="true">◷</span>
+                <span>Focus</span>
+            </button>
+            <button class="nav-button" type="button" data-go="settings">
+                <span class="nav-mark" aria-hidden="true">＋</span>
+                <span>Setup</span>
+            </button>
+        </nav>
+    </div>
+
+    <div id="intention-modal" class="modal" hidden>
+        <div class="modal-backdrop" data-close-modal="intention"></div>
+        <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="intention-modal-title">
+            <p class="eyebrow">PAUSE</p>
+            <h2 id="intention-modal-title">Open <span id="pending-app-name">this app</span>?</h2>
+            <p class="modal-copy">Name the reason before giving it your attention.</p>
+            <label for="opening-reason-input">Why now? <span class="label-note">not saved</span></label>
+            <input id="opening-reason-input" type="text" maxlength="80" placeholder="I am opening it to…">
+            <div class="modal-actions">
+                <button class="secondary-button" type="button" data-close-modal="intention">Cancel</button>
+                <button id="continue-app-button" class="primary-button" type="button" disabled>Continue in 5</button>
+            </div>
         </section>
-        <section>
-    <h2>Checklist</h2>
+    </div>
 
-    <form id="task-form">
-        <input id="task-input" type="text" placeholder="Add a task">
-        <button type="submit">Add task</button>
-    </form>
+    <div id="call-modal" class="modal" hidden>
+        <div class="modal-backdrop" data-close-modal="call"></div>
+        <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="call-modal-title">
+            <p class="eyebrow">PHONE</p>
+            <h2 id="call-modal-title">Place a call</h2>
+            <form id="call-form" class="stack-form">
+                <label for="phone-number-input">Number</label>
+                <input id="phone-number-input" type="tel" inputmode="tel" autocomplete="tel" placeholder="+1 000 000 0000" required>
+                <div class="modal-actions">
+                    <button class="secondary-button" type="button" data-close-modal="call">Cancel</button>
+                    <button class="primary-button" type="submit">Call</button>
+                </div>
+            </form>
+        </section>
+    </div>
 
-    <ul id="task-list"></ul>
-    <button id="clear-tasks-button" type="button">Clear checklist</button>
-</section>
-<section>
-    <h2>Focus</h2>
-    <p id="timer-display">25:00</p>
-    <button id="start-timer-button" type="button">Start</button>
-    <button id="reset-timer-button" type="button">Reset</button>
-</section>
-    </main>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
     <script src="script.js"></script>
 </body>

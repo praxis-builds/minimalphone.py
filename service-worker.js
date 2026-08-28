@@ -1,88 +1,80 @@
-const CACHE_NAME = "minimal-beta-v1";
+"use strict";
 
+const CACHE_NAME = "minimal-phone-v2.0.0";
+const BASE_URL = new URL("./", self.location.href);
+const OFFLINE_URL = new URL("index.html", BASE_URL).href;
 const APP_SHELL = [
-    "./",
-    "./index.html",
-    "./style.css",
-    "./script.js",
-    "./manifest.webmanifest",
-    "./icon.svg"
-];
+    "",
+    "index.html",
+    "style.css",
+    "script.js",
+    "manifest.webmanifest",
+    "icon.svg",
+    "icon-192.png",
+    "icon-512.png",
+    "apple-touch-icon.png"
+].map((path) => new URL(path, BASE_URL).href);
 
-self.addEventListener("install", function (event) {
+self.addEventListener("install", (event) => {
     event.waitUntil(
         caches
             .open(CACHE_NAME)
-            .then(function (cache) {
-                return cache.addAll(APP_SHELL);
-            })
-            .then(function () {
-                return self.skipWaiting();
-            })
+            .then((cache) => cache.addAll(APP_SHELL))
+            .then(() => self.skipWaiting())
     );
 });
 
-self.addEventListener("activate", function (event) {
+self.addEventListener("activate", (event) => {
     event.waitUntil(
         caches
             .keys()
-            .then(function (cacheNames) {
-                return Promise.all(
-                    cacheNames
-                        .filter(function (cacheName) {
-                            return cacheName !== CACHE_NAME;
-                        })
-                        .map(function (cacheName) {
-                            return caches.delete(cacheName);
-                        })
-                );
-            })
-            .then(function () {
-                return self.clients.claim();
-            })
+            .then((cacheNames) => Promise.all(
+                cacheNames
+                    .filter((cacheName) => cacheName !== CACHE_NAME)
+                    .map((cacheName) => caches.delete(cacheName))
+            ))
+            .then(() => self.clients.claim())
     );
 });
 
-self.addEventListener("fetch", function (event) {
-    const requestUrl = new URL(event.request.url);
+self.addEventListener("fetch", (event) => {
+    const request = event.request;
+    const requestUrl = new URL(request.url);
 
-    if (
-        event.request.method !== "GET" ||
-        requestUrl.origin !== self.location.origin
-    ) {
+    if (request.method !== "GET" || requestUrl.origin !== self.location.origin) {
+        return;
+    }
+
+    if (request.mode === "navigate") {
+        event.respondWith(
+            fetch(request)
+                .then((response) => {
+                    const copy = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(OFFLINE_URL, copy));
+                    return response;
+                })
+                .catch(async () => {
+                    return (await caches.match(OFFLINE_URL)) || (await caches.match(APP_SHELL[0]));
+                })
+        );
         return;
     }
 
     event.respondWith(
-        fetch(event.request)
-            .then(function (response) {
-                if (response.ok) {
-                    const responseCopy = response.clone();
+        caches.match(request).then((cachedResponse) => {
+            if (cachedResponse) {
+                return cachedResponse;
+            }
 
-                    caches.open(CACHE_NAME).then(function (cache) {
-                        cache.put(event.request, responseCopy);
-                    });
+            return fetch(request).then((response) => {
+                if (!response || response.status !== 200 || response.type !== "basic") {
+                    return response;
                 }
 
+                const copy = response.clone();
+                caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
                 return response;
-            })
-            .catch(function () {
-                return caches.match(event.request).then(function (cachedResponse) {
-                    if (cachedResponse) {
-                        return cachedResponse;
-                    }
-
-                    if (event.request.mode === "navigate") {
-                        return caches.match("./index.html");
-                    }
-
-                    return new Response("Offline", {
-                        status: 503,
-                        headers: {
-                            "Content-Type": "text/plain"
-                        }
-                    });
-                });
-            })
+            });
+        })
     );
 });

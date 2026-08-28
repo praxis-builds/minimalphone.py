@@ -1,29 +1,7 @@
-<svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 512 512"
->
-    <rect
-        width="512"
-        height="512"
-        rx="112"
-        fill="#000000"
-    />
-
-    <circle
-        cx="256"
-        cy="256"
-        r="188"
-        fill="none"
-        stroke="#262626"
-        stroke-width="8"
-    />
-
-    <path
-        d="M148 334 V178 L256 292 L364 178 V334"
-        fill="none"
-        stroke="#ffffff"
-        stroke-width="36"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-    />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title description">
+    <title id="title">Minimal Phone</title>
+    <desc id="description">A white minimal letter M on a black rounded square.</desc>
+    <rect width="512" height="512" rx="112" fill="#000000"/>
+    <path d="M128 350V162h44l84 104 84-104h44v188h-52V240l-76 91-76-91v110z" fill="#f5f5f2"/>
+    <circle cx="256" cy="402" r="12" fill="#f5f5f2"/>
 </svg>

@@ -1,0 +1,88 @@
+MINIMAL PHONE — COMPLETE BETA 2.0 REBUILD
+
+WHAT THIS PACKAGE CONTAINS
+
+Replace or add these nine files in your minimalphone.py project folder:
+
+1. index.html
+2. style.css
+3. script.js
+4. manifest.webmanifest
+5. service-worker.js
+6. icon.svg
+7. apple-touch-icon.png
+8. icon-192.png
+9. icon-512.png
+
+Do not copy START-HERE.txt into the public project unless you want it there.
+
+WHAT THE REBUILD INCLUDES
+
+- Installable black-and-white iPhone PWA
+- Private local-only storage
+- Text-first customizable app launcher
+- Starter apps for Calls, Messages, WhatsApp, Maps, Music, ChatGPT, and YouTube
+- Five-second intentional pause that can be enabled per app
+- One daily intention
+- Up to ten active tasks
+- Accurate 25, 5, 50, or custom-minute focus timer
+- User name, 12/24-hour clock, seconds, and accent settings
+- Add, edit, reorder, and remove up to twelve essential apps
+- JSON backup, restore, and full local reset
+- Offline service worker
+- iPhone Home Screen icons
+- Strict content-security policy and no analytics
+
+PREVIEW ON THE LAPTOP
+
+From the VS Code terminal inside the project folder, run:
+
+python3 -m http.server 8000
+
+Then open:
+
+http://localhost:8000
+
+Press Ctrl+C in the terminal when you want to stop the preview server.
+
+PUBLISH TO GITHUB
+
+Run these commands one at a time:
+
+git status
+git add .
+git commit -m "Rebuild Minimal as an intentional iPhone launcher"
+git pull --rebase origin main
+git push
+
+Your existing GitHub Pages address remains:
+
+https://sidhu-builds.github.io/minimalphone.py/
+
+IPHONE REFRESH
+
+After GitHub Pages updates:
+
+1. Remove the old Minimal icon from the iPhone Home Screen. This does not delete the website.
+2. Open the live address in Safari.
+3. Refresh once.
+4. Tap Share, then Add to Home Screen, then Add.
+5. Open Minimal once while online so its offline files can be cached.
+
+OPENING APPS
+
+HTTPS links often hand off to the installed app automatically. Apple system links such as sms: and tel: are also supported.
+
+For an app that does not open reliably, create an iPhone Shortcut:
+
+1. Open Shortcuts and create a shortcut called Open Spotify.
+2. Add the Open App action and select Spotify.
+3. In Minimal Setup, add Spotify with this link:
+
+shortcuts://run-shortcut?name=Open%20Spotify
+
+Replace Spotify in both places with the exact app name you need.
+
+DATA NOTE
+
+Beta 2.0 uses a new local data structure, so the old beta's priority and tasks are not automatically copied. New data stays only on the device/browser where it was entered. Use Export backup inside Setup before clearing Safari website data or changing phones.
