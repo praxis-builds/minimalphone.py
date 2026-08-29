@@ -16,7 +16,8 @@ It is an installable Progressive Web App (PWA) that keeps priorities, Small Move
 - Read-only history with deliberate historical editing
 - Yearly statistics, streaks, strongest month, and monthly progress
 - Up to 30 configurable launcher entries
-- Focus timer
+- Item-attached 25/50/custom focus timer with local session history
+- Optional 5-minute break timer
 - Profiles, clock preferences, and restrained accent choices
 - JSON backup and restore
 - Installable iPhone Home Screen experience
@@ -45,11 +46,11 @@ Read [PRIVACY.md](PRIVACY.md) before entering personal information.
 4. Confirm the name and tap **Add**.
 5. Open Minimal once while connected so its application shell can be cached.
 
-Minimal can then open in a standalone app window. Core local features should remain available offline after the first successful load. External launcher destinations may still require internet access or their corresponding installed apps.
+Minimal can then open in a standalone app window. Core local features should remain available offline after the first successful load. External launcher destinations may still require internet access or their corresponding installed apps. A running Focus timer is reconciled from its stored timestamp when Minimal reopens, but Minimal cannot notify while it is completely closed.
 
 ## Backup and restore
 
-Use **Export data** in Settings to download a JSON backup. JSON preserves structured records such as dates, states, settings, and history.
+Use **Export data** in Settings to download a JSON backup. JSON preserves structured records such as dates, states, settings, history, active Focus timer state, and completed Focus sessions.
 
 Backups are plain text and are **not encrypted**. Store them privately. Do not put passwords, banking credentials, authentication codes, recovery phrases, or other secrets in Minimal.
 
