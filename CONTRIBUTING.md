@@ -39,12 +39,15 @@ Also test:
 - Existing stored-data migration
 - Daily states and scoring
 - History isolation
-- JSON export/import
+- JSON export/import, including Focus timer and session records
+- Focus start, pause, resume, reset, timestamp recovery, and one-active-timer behavior
+- Explicit Mark done behavior and completed Focus-session history
 - Offline reload after a successful online load
 - Keyboard navigation
 - Reduced motion
 - Narrow iPhone-sized layouts
 - GitHub Pages subdirectory paths
+- Service-worker cache versioning after application-shell changes
 
 ## Pull-request expectations
 
