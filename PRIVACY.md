@@ -21,7 +21,7 @@ Minimal does not include:
 - Social profiles
 - Third-party runtime scripts or software development kits
 
-Minimal itself does not send a user's priorities, Small Moves, conclusions, history, profile, manual location label, or settings to Sidhu Builds.
+Minimal itself does not send a user's priorities, Small Moves, conclusions, Focus timer or session records, history, profile, manual location label, or settings to Sidhu Builds.
 
 ## Information stored on the device
 
@@ -33,6 +33,7 @@ Locally stored records can include:
 - Daily priorities and their states
 - Small Moves configuration and daily states
 - Daily conclusions
+- Active Focus timer state and completed Focus-session history
 - Planned future items
 - History and calculated statistics
 - Launcher labels and destinations
@@ -53,6 +54,8 @@ When a user intentionally opens a launcher destination, the browser or operating
 ## Offline use
 
 After a successful initial load, Minimal's service worker may cache the application shell for offline use. Offline availability is controlled partly by the browser and operating system and is not guaranteed permanently.
+
+A running Focus timer uses stored timestamps and is reconciled when Minimal returns to the foreground or reopens. Minimal does not request notification permission or use Web Push, so it cannot notify while it is completely closed.
 
 ## Data retention and deletion
 
