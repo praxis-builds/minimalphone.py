@@ -2,19 +2,91 @@
 
 ## Supported versions
 
-Security fixes are supported for Minimal 1.0.x.
+| Version | Supported |
+|---|---|
+| 1.0.x | Yes |
+| Earlier beta versions | No |
+
+Security fixes are applied to the latest supported release.
 
 ## Reporting a vulnerability
 
-Please report a suspected vulnerability privately to the project maintainer through a private contact channel associated with Sidhu Builds. If no private channel is available, open a minimal public issue requesting private contact without including exploit details or user data.
+Please report suspected vulnerabilities privately through GitHub's **Report a vulnerability** feature in the repository's Security tab when it is available.
 
-Include the affected version, reproduction conditions, impact, and a concise proof of concept when safe. Do not include private user data, exported backups, credentials, phone numbers, conclusions, or other sensitive content in a public report.
+Do not place the following in a public issue, pull request, discussion, or screenshot:
 
-Allow reasonable time for investigation and remediation before public disclosure.
+- Exploit instructions for an unpatched vulnerability
+- Personal information
+- Minimal JSON backups
+- Authentication tokens
+- Passwords or recovery codes
+- Private repository or device information
 
-## Deployment and local data
+If private vulnerability reporting is temporarily unavailable, open a public issue containing only a short request for a private reporting channel. Do not disclose the vulnerability details in that issue.
 
-Pull requests do not automatically deploy or publish Minimal. Repository changes require a separate maintainer-controlled release process.
+Reports are most useful when they include:
 
-Minimal’s browser storage is local but is not claimed to be encrypted. Device access controls and browser-profile security remain important.
+- Affected version or commit
+- A concise description of the impact
+- Reproduction steps using non-sensitive test data
+- Browser and operating-system versions
+- A proposed mitigation, if known
 
+Sidhu Builds will acknowledge and investigate reports when practical. Please allow time for validation and a coordinated fix before public disclosure.
+
+## Security model
+
+Minimal is a static, local-first Progressive Web App:
+
+- No account system
+- No application backend
+- No cloud database
+- No analytics or advertising
+- No automatic location collection
+- Browser-origin local storage
+- A same-origin Content Security Policy
+- An offline service worker
+
+This reduces the amount of remotely stored user data, but it does not eliminate risk.
+
+## Important limitations
+
+- Locally stored records are not separately encrypted by Minimal.
+- Anyone with access to an unlocked device or browser profile may be able to read them.
+- JSON exports are unencrypted plain text.
+- Browser storage can be cleared, evicted, or corrupted.
+- External launcher destinations operate under their own security and privacy rules.
+- The online/offline indicator is a connection hint, not a security guarantee.
+- Minimal must not be used to store passwords, private keys, recovery phrases, authentication codes, financial credentials, or other secrets.
+
+## Repository and release security
+
+The public repository contains source code, not users' locally stored Minimal records.
+
+Forking the repository or opening a pull request does not modify the live application. A change reaches the live GitHub Pages version only after a maintainer reviews and merges it into the publishing branch.
+
+Contributors must never commit:
+
+- Real user backups
+- `.env` files
+- Access tokens
+- API keys
+- Passwords
+- Private certificates or signing keys
+- Personal datasets
+
+Pull requests should be small enough to review, pass repository validation, preserve the Content Security Policy, and avoid unnecessary external dependencies.
+
+## Dependency policy
+
+Minimal intentionally avoids runtime package dependencies and third-party scripts. Any proposal to add a dependency must explain:
+
+- Why it is necessary
+- What data it can access
+- Its maintenance and security history
+- Whether the same result can be achieved with platform APIs
+- How it affects offline use and Content Security Policy
+
+## Security is a shared process
+
+No software can promise absolute security. Keep the device and browser updated, use a strong device passcode, protect the GitHub maintainer account with a passkey or two-factor authentication, review changes before merging, and keep private backups secure.
