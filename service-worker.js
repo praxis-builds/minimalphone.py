@@ -1,19 +1,16 @@
-"use strict";
+const CACHE_NAME = "minimal-daily-os-1.0.0-focus-1";
 
-const CACHE_NAME = "minimal-phone-v2.0.0";
-const BASE_URL = new URL("./", self.location.href);
-const OFFLINE_URL = new URL("index.html", BASE_URL).href;
 const APP_SHELL = [
-    "",
-    "index.html",
-    "style.css",
-    "script.js",
-    "manifest.webmanifest",
-    "icon.svg",
-    "icon-192.png",
-    "icon-512.png",
-    "apple-touch-icon.png"
-].map((path) => new URL(path, BASE_URL).href);
+    "./",
+    "./index.html",
+    "./style.css",
+    "./script.js",
+    "./manifest.webmanifest",
+    "./icon.svg",
+    "./apple-touch-icon.png",
+    "./icon-192.png",
+    "./icon-512.png"
+];
 
 self.addEventListener("install", (event) => {
     event.waitUntil(
@@ -28,20 +25,27 @@ self.addEventListener("activate", (event) => {
     event.waitUntil(
         caches
             .keys()
-            .then((cacheNames) => Promise.all(
-                cacheNames
-                    .filter((cacheName) => cacheName !== CACHE_NAME)
-                    .map((cacheName) => caches.delete(cacheName))
-            ))
+            .then((names) =>
+                Promise.all(
+                    names
+                        .filter((name) => name.startsWith("minimal-") && name !== CACHE_NAME)
+                        .map((name) => caches.delete(name))
+                )
+            )
             .then(() => self.clients.claim())
     );
 });
 
 self.addEventListener("fetch", (event) => {
     const request = event.request;
+
+    if (request.method !== "GET" || request.cache === "only-if-cached" && request.mode !== "same-origin") {
+        return;
+    }
+
     const requestUrl = new URL(request.url);
 
-    if (request.method !== "GET" || requestUrl.origin !== self.location.origin) {
+    if (requestUrl.origin !== self.location.origin) {
         return;
     }
 
@@ -50,31 +54,33 @@ self.addEventListener("fetch", (event) => {
             fetch(request)
                 .then((response) => {
                     const copy = response.clone();
-                    caches.open(CACHE_NAME).then((cache) => cache.put(OFFLINE_URL, copy));
+
+                    if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", copy));
+
                     return response;
                 })
-                .catch(async () => {
-                    return (await caches.match(OFFLINE_URL)) || (await caches.match(APP_SHELL[0]));
-                })
+                .catch(() => caches.match("./index.html"))
         );
+
         return;
     }
 
     event.respondWith(
-        caches.match(request).then((cachedResponse) => {
-            if (cachedResponse) {
-                return cachedResponse;
-            }
+        caches.match(request).then((cached) => {
+            const network = fetch(request).then((response) => {
+                if (response.ok && response.type === "basic") {
+                    const copy = response.clone();
 
-            return fetch(request).then((response) => {
-                if (!response || response.status !== 200 || response.type !== "basic") {
-                    return response;
+                    caches
+                        .open(CACHE_NAME)
+                        .then((cache) =>
+                            cache.put(request, copy)
+                        );
                 }
 
-                const copy = response.clone();
-                caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
                 return response;
             });
+            return cached || network;
         })
     );
 });

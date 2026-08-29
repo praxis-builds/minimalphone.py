@@ -1,0 +1,75 @@
+name: Validate Minimal
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check script.js
+          node --check service-worker.js
+
+      - name: Validate manifest and HTML invariants
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+
+          const manifest = JSON.parse(
+            fs.readFileSync("manifest.webmanifest", "utf8")
+          );
+
+          for (const key of ["name", "short_name", "start_url", "scope", "display"]) {
+            if (!manifest[key]) {
+              throw new Error(`manifest.webmanifest is missing ${key}`);
+            }
+          }
+
+          const html = fs.readFileSync("index.html", "utf8");
+          const ids = [...html.matchAll(/\bid\s*=\s*["']([^"']+)["']/g)]
+            .map((match) => match[1]);
+          const duplicates = [...new Set(
+            ids.filter((id, index) => ids.indexOf(id) !== index)
+          )];
+
+          if (duplicates.length) {
+            throw new Error(`Duplicate HTML IDs: ${duplicates.join(", ")}`);
+          }
+
+          const cspTag = html.match(
+            /<meta\b[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/i
+          )?.[0] || "";
+          const csp =
+            cspTag.match(/\bcontent="([^"]*)"/i)?.[1] ||
+            cspTag.match(/\bcontent='([^']*)'/i)?.[1] ||
+            "";
+
+          for (const directive of [
+            "default-src 'self'",
+            "object-src 'none'",
+            "base-uri 'none'"
+          ]) {
+            if (!csp.includes(directive)) {
+              throw new Error(`Content Security Policy is missing: ${directive}`);
+            }
+          }
+
+          console.log("Manifest and HTML checks passed.");
+          NODE
