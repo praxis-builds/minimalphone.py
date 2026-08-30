@@ -4,3 +4,203 @@
 .configured-move.disabled .item-text{color:var(--muted);text-decoration:line-through}.configured-move .item-actions{flex-wrap:wrap;justify-content:flex-end}.move-state{font-size:.65rem;font-weight:800;color:var(--accent)}.configured-move.disabled .move-state{color:var(--muted)}.form-message{min-height:1.5em;color:var(--accent);font-size:.85rem}.suggestions,.field-note{font-size:.85rem;color:var(--muted)}.status-controls{display:flex;gap:.3rem}.status-button{width:42px;height:42px;min-height:42px;padding:0;background:transparent;color:var(--muted);border-color:var(--line)}.done .done-control{background:var(--accent);border-color:var(--accent);color:#050505}.skipped .skip-control{background:#81553f;border-color:#a46c50;color:#fff}.skipped .item-text{color:#ad8b7a;text-decoration:line-through}.setting-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.75rem 0;border-bottom:1px solid var(--line)}.setting-row span{display:grid}.setting-row small{color:var(--muted);font-weight:400}.setting-row input{width:24px;min-height:24px}.reminder-banner{position:fixed;z-index:35;left:50%;bottom:calc(84px + var(--safe-bottom));transform:translateX(-50%);width:min(92vw,540px);display:flex;align-items:center;justify-content:space-between;gap:.75rem;background:var(--raised);border:1px solid var(--accent);border-radius:15px;padding:.75rem 1rem}.reminder-banner button{flex:0 0 auto}.item{min-width:0}.item-text{min-width:0}body{overflow-x:hidden}
 .item-actions{flex-wrap:wrap;justify-content:flex-end;max-width:11rem}.item-content{display:grid;min-width:0}.focus-summary{color:var(--muted);font-size:.72rem;margin-top:.15rem}.active-focus-bar{width:100%;display:flex;align-items:center;justify-content:space-between;gap:1rem;margin:-.25rem 0 1rem;background:var(--raised);color:var(--text);border-color:var(--accent);text-align:left}.active-focus-bar time{color:var(--accent);font-variant-numeric:tabular-nums}.focus-layer{position:fixed;z-index:60;inset:0;background:var(--bg);overflow-y:auto;padding:max(1.25rem,env(safe-area-inset-top)) max(1rem,env(safe-area-inset-right)) max(1.25rem,env(safe-area-inset-bottom)) max(1rem,env(safe-area-inset-left))}.focus-shell{width:min(100%,620px);min-height:calc(100dvh - 3rem);margin:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}.focus-shell h1{font-size:clamp(1.7rem,8vw,3rem);overflow-wrap:anywhere}.focus-timer{font-size:clamp(4rem,22vw,8rem);font-weight:750;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.05em;margin:2rem 0 .75rem}.focus-status{color:var(--muted);margin-bottom:1.5rem}.duration-choices{display:flex;flex-wrap:wrap;align-items:end;justify-content:center;gap:.6rem;width:100%}.duration-choices label{max-width:9rem;text-align:left}.focus-actions,.focus-complete-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:.7rem;margin-top:1.25rem}.focus-actions button,.focus-complete-actions button,.focus-back{min-width:120px;min-height:52px}.focus-back{margin-top:2rem}body.focus-open{overflow:hidden}@media(max-width:360px){.shell{padding-inline:.7rem}.panel{padding:.85rem}.item{gap:.4rem}.status-controls{gap:.15rem}.status-button{width:38px;height:40px}.icon-action{padding:.25rem}.item-actions{grid-column:2/4;max-width:none}.focus-timer{font-size:3.8rem}.duration-choices{display:grid;grid-template-columns:1fr 1fr}.duration-choices label{max-width:none}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+/* Minimal 1.0.1 mobile containment */
+html,
+body,
+.shell,
+main,
+.view,
+.panel,
+.score-grid,
+.score-card,
+.item,
+.item-content,
+.item-actions,
+.inline-form,
+.page-head,
+.section-head,
+.setting-row,
+.history-card,
+.active-focus-bar {
+    min-width: 0;
+    max-width: 100%;
+}
+
+input,
+textarea,
+select,
+button {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.inline-form {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.score-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.score-card strong {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.item {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.item-text,
+.focus-summary,
+.page-head > *,
+.section-head > *,
+.setting-row > span,
+.active-focus-label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.history-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.month-row {
+    min-width: 0;
+    max-width: 100%;
+    grid-template-columns: 2.4rem minmax(0, 1fr) 3rem;
+}
+
+@media (max-width: 600px) {
+    .shell {
+        width: 100%;
+        padding-inline: max(.75rem, env(safe-area-inset-left));
+    }
+
+    .topbar,
+    .hero,
+    .page-head,
+    .section-head,
+    .setting-row {
+        min-width: 0;
+    }
+
+    .page-head,
+    .section-head {
+        flex-wrap: wrap;
+    }
+
+    .topbar {
+        gap: .65rem;
+    }
+
+    .top-meta {
+        min-width: 0;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: .35rem .65rem;
+        text-align: right;
+    }
+
+    .score-grid {
+        gap: .4rem;
+    }
+
+    .score-card {
+        padding: .7rem .45rem;
+        text-align: center;
+    }
+
+    .score-card strong {
+        font-size: clamp(.9rem, 4.4vw, 1.25rem);
+        line-height: 1.2;
+    }
+
+    .score-card span,
+    .score-card small {
+        font-size: .66rem;
+    }
+
+    .item {
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: start;
+    }
+
+    .item-actions {
+        grid-column: 2;
+        width: 100%;
+        max-width: none;
+        justify-content: flex-start;
+    }
+
+    .configured-move .item-actions {
+        grid-column: 2;
+        justify-content: flex-start;
+    }
+
+    .icon-action {
+        flex: 0 1 auto;
+        overflow-wrap: anywhere;
+    }
+
+    .active-focus-bar {
+        gap: .6rem;
+    }
+
+    .active-focus-bar span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .active-focus-bar time {
+        flex: 0 0 auto;
+    }
+
+    .month-row {
+        grid-template-columns: 2.2rem minmax(0, 1fr) 2.8rem;
+    }
+
+    .reminder-banner {
+        max-width: calc(100vw - 1.5rem);
+        flex-wrap: wrap;
+    }
+
+    .reminder-banner button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 360px) {
+    .shell {
+        padding-inline: max(.6rem, env(safe-area-inset-left));
+    }
+
+    .panel,
+    .year-summary {
+        padding: .8rem;
+    }
+
+    .score-card {
+        padding-inline: .3rem;
+    }
+
+    .status-button {
+        width: 38px;
+    }
+
+    .focus-actions,
+    .focus-complete-actions {
+        display: grid;
+        width: 100%;
+        grid-template-columns: 1fr;
+    }
+
+    .focus-actions button,
+    .focus-complete-actions button,
+    .focus-back {
+        width: 100%;
+    }
+}
