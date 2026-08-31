@@ -4,7 +4,7 @@ Minimal is a private, low-stimulation daily operating system for an intentional 
 
 It is an installable Progressive Web App (PWA) that keeps priorities, Small Moves, daily conclusions, history, launcher settings, and preferences on the device. Minimal has no account system, analytics, advertising, or cloud database.
 
-**Live app:** https://sidhu-builds.github.io/minimalphone.py/
+**Live app:** https://praxis-builds.github.io/minimalphone.py/
 
 ## What Minimal includes
 
@@ -40,7 +40,7 @@ Read [PRIVACY.md](PRIVACY.md) before entering personal information.
 
 ## Install on iPhone
 
-1. Open the [live Minimal site](https://sidhu-builds.github.io/minimalphone.py/) in Safari.
+1. Open the [live Minimal site](https://praxis-builds.github.io/minimalphone.py/) in Safari.
 2. Tap **Share**.
 3. Tap **Add to Home Screen**.
 4. Confirm the name and tap **Add**.
