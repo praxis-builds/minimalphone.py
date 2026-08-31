@@ -32,7 +32,7 @@ Reports are most useful when they include:
 - Browser and operating-system versions
 - A proposed mitigation, if known
 
-Sidhu Builds will acknowledge and investigate reports when practical. Please allow time for validation and a coordinated fix before public disclosure.
+Praxis Builds will acknowledge and investigate reports when practical. Please allow time for validation and a coordinated fix before public disclosure.
 
 ## Security model
 
