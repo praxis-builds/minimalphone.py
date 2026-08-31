@@ -57,7 +57,7 @@ git push
 
 Your existing GitHub Pages address remains:
 
-https://sidhu-builds.github.io/minimalphone.py/
+https://praxis-builds.github.io/minimalphone.py/
 
 IPHONE REFRESH
 
