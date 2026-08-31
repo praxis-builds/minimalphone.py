@@ -204,3 +204,25 @@ button {
         width: 100%;
     }
 }
+
+
+.praxis-contact {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: .45rem .9rem;
+    padding: 1rem max(1rem, env(safe-area-inset-right)) calc(1rem + env(safe-area-inset-bottom));
+    color: var(--muted);
+    font-size: .75rem;
+    text-align: center;
+}
+
+.praxis-contact a {
+    color: inherit;
+    text-underline-offset: .18em;
+}
+
+.praxis-contact a:hover,
+.praxis-contact a:focus-visible {
+    color: var(--accent);
+}
