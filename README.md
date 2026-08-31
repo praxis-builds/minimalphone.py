@@ -106,4 +106,4 @@ Minimal is not a replacement for emergency, medical, financial, legal, or securi
 
 Minimal is available under the [MIT License](LICENSE).
 
-Copyright © 2026 Sidhu Builds.
+Copyright © 2026 Praxis Builds.
