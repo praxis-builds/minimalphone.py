@@ -21,7 +21,7 @@ Minimal does not include:
 - Social profiles
 - Third-party runtime scripts or software development kits
 
-Minimal itself does not send a user's priorities, Small Moves, conclusions, Focus timer or session records, history, profile, manual location label, or settings to Sidhu Builds.
+Minimal itself does not send a user's priorities, Small Moves, conclusions, Focus timer or session records, history, profile, manual location label, or settings to Praxis Builds.
 
 ## Information stored on the device
 
@@ -49,7 +49,7 @@ When Minimal is loaded from GitHub Pages, the browser requests the application's
 
 Minimal may display an online/offline hint using browser-provided connection state. This is only a local hint and does not perform location tracking.
 
-When a user intentionally opens a launcher destination, the browser or operating system may open another website or application. That destination has its own privacy policy and data practices. Sidhu Builds does not control those services.
+When a user intentionally opens a launcher destination, the browser or operating system may open another website or application. That destination has its own privacy policy and data practices. Praxis Builds does not control those services.
 
 ## Offline use
 
@@ -95,7 +95,7 @@ Use the device's passcode, biometric lock, software updates, and account protect
 
 ## Children
 
-Minimal is a general productivity tool and is not intentionally designed to collect children's personal information. Because it has no account or cloud collection system, Sidhu Builds does not receive a user's age or locally entered records.
+Minimal is a general productivity tool and is not intentionally designed to collect children's personal information. Because it has no account or cloud collection system, Praxis Builds does not receive a user's age or locally entered records.
 
 ## Changes to this policy
 
