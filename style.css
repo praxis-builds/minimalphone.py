@@ -226,3 +226,4 @@ button {
 .praxis-contact a:focus-visible {
     color: var(--accent);
 }
+.blank-day{border-style:dashed;color:var(--text)}.blank-day .history-score{font-size:1.7rem;line-height:1}.blank-day small{color:var(--accent)}

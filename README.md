@@ -14,7 +14,7 @@ It is an installable Progressive Web App (PWA) that keeps priorities, Small Move
 - 80/20 daily scoring
 - Plan Tomorrow and new-day rollover
 - Read-only history with deliberate historical editing
-- History date picker to fill in missed days, including days never opened
+- History lists every day in the selected year; blank days open ready to fill in
 - Add, edit, remove, and mark Small Moves on a past date without changing daily settings
 - Yearly statistics, streaks, strongest month, and monthly progress
 - Up to 30 configurable launcher entries
