@@ -1,4 +1,4 @@
-const CACHE_NAME = "minimal-daily-os-1.0.1-mobile-1";
+const CACHE_NAME = "minimal-daily-os-1.0.2-history-1";
 
 const APP_SHELL = [
     "./",
