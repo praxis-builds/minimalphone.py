@@ -251,3 +251,7 @@ button {
 .history-card.missed .history-score {
     color: var(--muted);
 }
+
+/* Sync */
+.conflict-list{margin:.5rem 0 1rem;padding-left:1.1rem;display:grid;gap:.4rem;color:var(--muted)}
+#sync-panel h3{margin:1rem 0 .25rem;font-size:1rem}

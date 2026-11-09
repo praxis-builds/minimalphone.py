@@ -22,3 +22,9 @@ Thumbs.db
 *.log
 *.tmp
 *.swp
+
+# Build output and dependencies
+node_modules/
+dist/
+.wrangler/
+.dev.vars

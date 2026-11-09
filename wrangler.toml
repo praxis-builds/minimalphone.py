@@ -1,0 +1,15 @@
+# Cloudflare Pages project for Minimal. See docs/SYNC.md.
+name = "minimal"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-10-01"
+
+# Workers logs are off: the API never writes entries to logs.
+[observability]
+enabled = false
+
+[[d1_databases]]
+binding = "DB"
+database_name = "minimal"
+# Filled in after `npx wrangler d1 create minimal` (docs/SYNC.md step 3).
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"

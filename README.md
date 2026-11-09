@@ -2,7 +2,7 @@
 
 Minimal is a private, low-stimulation daily operating system for an intentional iPhone.
 
-It is an installable Progressive Web App (PWA) that keeps priorities, Small Moves, daily conclusions, history, launcher settings, and preferences on the device. Minimal has no account system, analytics, advertising, or cloud database.
+It is an installable Progressive Web App (PWA) that keeps priorities, Small Moves, daily conclusions, history, launcher settings, and preferences on the device. Optional Sync keeps the main copy in your own Cloudflare account so a new phone can restore everything. Minimal has no analytics or advertising.
 
 **Live app:** https://praxis-builds.github.io/minimalphone.py/
 
@@ -24,6 +24,7 @@ It is an installable Progressive Web App (PWA) that keeps priorities, Small Move
 - Optional 5-minute break timer
 - Profiles, clock preferences, and restrained accent choices
 - JSON backup and restore
+- Optional Sync through your own Cloudflare account (offline-first, latest edit wins per item, conflict list)
 - Installable iPhone Home Screen experience
 - Offline access after the first successful load
 
@@ -50,14 +51,14 @@ Weekend records are stored under Saturday's date. When this version first runs, 
 
 Minimal is local-first:
 
-- No registration or user account
+- No registration or user account; Sync uses a single passcode that you set
 - No analytics or advertising
-- No cloud synchronization
 - No automatic location collection
-- No server-side database
 - No external runtime dependencies
 
 Records are stored by the browser for this site's origin using browser storage such as IndexedDB. Closing the app does not normally erase them, but clearing browser data, using private browsing, deleting site data, browser storage eviction, or changing devices can cause loss.
+
+With **Sync** on (Settings → Sync), a copy is also kept in a Cloudflare D1 database in your own Cloudflare account. It is protected by your passcode and HTTPS but is **not end-to-end encrypted**. Setup, deployment and restoring onto a new phone are in [docs/SYNC.md](docs/SYNC.md).
 
 Read [PRIVACY.md](PRIVACY.md) before entering personal information.
 
@@ -102,15 +103,17 @@ Stop the server with `Ctrl+C`.
 
 Do not open `index.html` directly with a `file://` URL when testing service workers or browser storage behavior.
 
+The static server above runs the app without Sync. To run it with the sync API and a local database, see [docs/SYNC.md](docs/SYNC.md#local-development) (`npm run dev`).
+
 ### Tests
 
-The tests need Node.js 20 or newer and have no dependencies:
+The tests need Node.js 22 or newer. Install the dev tools once with `npm ci`, then:
 
 ```bash
-node --test tests/logic.test.js
-node tests/history.cjs
-node tests/rollover.cjs
+npm test
 ```
+
+That runs `tests/logic.test.js` and `tests/sync-core.test.mjs` (Node), `tests/history.cjs` and `tests/rollover.cjs` (regression checks), and `tests/api/` (Vitest inside the Cloudflare Workers runtime against a temporary local D1 database). The API tests cover: calls without a valid session get 401, sign-in and lockout, offline edits syncing, latest-edit-wins with the conflict log, and the first upload running twice safely.
 
 `tests/logic.test.js` covers the default day (with the clock mocked, including Mondays), today being locked, the Weekend merge, and the percentage maths with today excluded.
 
@@ -120,6 +123,12 @@ node tests/rollover.cjs
 - `style.css` — responsive visual system
 - `script.js` — application state and behavior
 - `logic.js` — pure date, Weekend, scoring and merge logic, shared with the tests
+- `sync-core.js` — shared sync rules (records, latest-edit-wins, op ids)
+- `sync-client.js` — the phone's sync engine (outbox, upload, merge)
+- `api/app.js`, `functions/api/[[route]].js` — the sync API (Cloudflare Pages Function)
+- `migrations/` — D1 database schema
+- `scripts/build.mjs` — builds `dist/` for Cloudflare Pages
+- `docs/SYNC.md` — Cloudflare setup, deploy and restore
 - `tests/` — unit and regression tests (see [Tests](#tests))
 - `manifest.webmanifest` — PWA metadata
 - `service-worker.js` — offline application shell

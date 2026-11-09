@@ -1,27 +1,39 @@
 # Privacy Policy
 
-**Effective date:** August 29, 2026  
-**Applies to:** Minimal 1.0.x
+**Effective date:** November 9, 2026  
+**Applies to:** Minimal 1.3.x
 
-Minimal is designed as a local-first, account-free Progressive Web App.
+Minimal is designed as a local-first Progressive Web App. It works fully on the device. Optional **Sync** keeps a copy of the records in a Cloudflare database that belongs to whoever deployed that copy of Minimal and holds its passcode.
 
 ## Information Minimal does not collect
 
 Minimal does not include:
 
-- User accounts
+- User accounts (Sync uses one passcode, set by the person who deploys it)
 - Analytics
 - Advertising
 - Tracking pixels
-- A cloud database
-- Cloud synchronization
 - Automatic geolocation
 - IP-based location lookup
 - Telemetry
 - Social profiles
 - Third-party runtime scripts or software development kits
 
-Minimal itself does not send a user's priorities, Small Moves, conclusions, Focus timer or session records, history, profile, manual location label, or settings to Praxis Builds.
+Minimal does not send a user's priorities, Small Moves, conclusions, Focus timer or session records, history, profile, manual location label, or settings to Praxis Builds.
+
+## Optional Sync
+
+Sync is off until someone signs in on the Settings screen with the passcode of their own deployment. Without Sync, nothing below applies.
+
+When Sync is on:
+
+- **What is sent:** profile fields, accent, reminder, Small Moves and launcher settings, daily priorities, planned items, Small Move states, conclusions, day flags, completed Focus sessions, and the item identities used by Patterns. The active Focus timer, export dates and migration flags stay on the device.
+- **Where it is stored:** in the Cloudflare D1 database bound to that deployment, in the deployer's own Cloudflare account. Cloudflare processes it under the deployer's agreement with Cloudflare. Praxis Builds has no access to it.
+- **Encryption:** traffic uses HTTPS and Cloudflare encrypts stored data at rest. Records are **not end-to-end encrypted**: the server can read them, because it has to merge edits from different phones and check whether a day was logged.
+- **Sign-in:** the passcode is a Cloudflare secret and is never stored in the app or the repository. A sign-in creates a random session token, sent back as an HttpOnly, Secure, SameSite=Strict cookie that lasts 180 days and renews with use. The database stores only a SHA-256 hash of that token. After 10 wrong passcodes, sign-in is locked for 15 minutes. No IP addresses are stored.
+- **Logs:** the API does not write request bodies or entries to logs, and Workers logs are turned off for the project. Cloudflare may still keep standard request metadata for its own operation.
+- **Conflicts:** when two phones change the same item while apart, both values are kept in the database's conflict list until dismissed in Settings.
+- **Deletion:** "Clear all data" removes the copy on the current phone and signs it out; it does not delete the server copy. To delete the server copy, follow the steps in [docs/SYNC.md](docs/SYNC.md).
 
 ## Information stored on the device
 
@@ -45,7 +57,7 @@ A manually entered location label is only a label. Minimal does not verify it or
 
 ## Network activity
 
-When Minimal is loaded from GitHub Pages, the browser requests the application's public HTML, CSS, JavaScript, manifest, service worker, and icon files from GitHub Pages.
+The browser requests the application's public HTML, CSS, JavaScript, manifest, service worker, and icon files from the site that hosts Minimal (Cloudflare Pages, or GitHub Pages for the older copy). With Sync on, the app also calls that site's `/api/` endpoints.
 
 Minimal may display an online/offline hint using browser-provided connection state. This is only a local hint and does not perform location tracking.
 
@@ -59,7 +71,7 @@ A running Focus timer uses stored timestamps and is reconciled when Minimal retu
 
 ## Data retention and deletion
 
-Minimal has no server-side copy of local records and therefore cannot recover them.
+Without Sync, Minimal has no server-side copy of local records and therefore cannot recover them. With Sync on, a new phone can sign in and download the server copy.
 
 Browser-stored data may remain after closing Minimal. It may be deleted when:
 
@@ -95,7 +107,7 @@ Use the device's passcode, biometric lock, software updates, and account protect
 
 ## Children
 
-Minimal is a general productivity tool and is not intentionally designed to collect children's personal information. Because it has no account or cloud collection system, Praxis Builds does not receive a user's age or locally entered records.
+Minimal is a general productivity tool and is not intentionally designed to collect children's personal information. Praxis Builds does not receive a user's age or entered records, with or without Sync.
 
 ## Changes to this policy
 

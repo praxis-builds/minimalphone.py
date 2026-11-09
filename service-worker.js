@@ -1,10 +1,12 @@
-const CACHE_NAME = "minimal-daily-os-1.2.1-fixes-1";
+const CACHE_NAME = "minimal-daily-os-1.3.0-sync-1";
 
 const APP_SHELL = [
     "./",
     "./index.html",
     "./style.css",
     "./logic.js",
+    "./sync-core.js",
+    "./sync-client.js",
     "./script.js",
     "./manifest.webmanifest",
     "./icon.svg",
@@ -47,6 +49,11 @@ self.addEventListener("fetch", (event) => {
     const requestUrl = new URL(request.url);
 
     if (requestUrl.origin !== self.location.origin) {
+        return;
+    }
+
+    // Sync API responses are private and always live: never cache them.
+    if (requestUrl.pathname.includes("/api/")) {
         return;
     }
 

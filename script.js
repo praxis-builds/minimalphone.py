@@ -12,7 +12,7 @@ function unitName(k){if(k===defaultLogUnit())return isWeekendKey(k)?"the weekend
 function unitDateText(k){return isWeekendKey(k)?`${formatDate(k)} – ${formatDate(unitEnd(k))}`:formatDate(k);}
 function conclusionMax(k){return isWeekendKey(k)?WEEKEND_CONCLUSION_MAX:500;}
 
-const VERSION="1.0.0",SCHEMA_VERSION=4,DB_NAME="minimal-daily-os",DB_VERSION=2,MAX_PRIORITIES=10,MAX_LAUNCHERS=30;
+const VERSION="1.0.0",SCHEMA_VERSION=4,DB_NAME="minimal-daily-os",DB_VERSION=3,MAX_PRIORITIES=10,MAX_LAUNCHERS=30;
 const SAFE_PROTOCOLS=new Set(["https:","http:","tel:","sms:","mailto:","facetime:","facetime-audio:","shortcuts:","maps:","music:","spotify:"]);
 const ACCENTS={mint:["#9cffc8","156,255,200"],ice:["#8fdcff","143,220,255"],amber:["#ffc56e","255,197,110"],violet:["#c9a7ff","201,167,255"],coral:["#ff9b8e","255,155,142"],blue:["#87aaff","135,170,255"]};
 const DEFAULT_LAUNCHERS=[
@@ -24,7 +24,7 @@ const DEFAULT_LAUNCHERS=[
 const $=id=>document.getElementById(id);let db=null,fallback=false,config,days=[],activeDate=defaultLogUnit(),editable=true,dialogMode="",conclusionTimer,toastTimer,focusInterval,patternSelectedId="",patternRange="30",pendingBackup=null;const scoreBaselines=new Map();
 
 document.addEventListener("DOMContentLoaded",init);
-async function init(){bind();await openDatabase();await loadData();await migrateLegacy();await migrateItemIdentity();await migrateWeekendUnits();await ensureToday();renderAll();tick();syncFocusTimer();setInterval(tick,1000);focusInterval=setInterval(syncFocusTimer,500);addEventListener("online",renderOnline);addEventListener("offline",renderOnline);addEventListener("focus",resumeForeground);addEventListener("pageshow",resumeForeground);document.addEventListener("visibilitychange",()=>{if(!document.hidden)resumeForeground();});registerServiceWorker();await checkReminder();}
+async function init(){bind();await openDatabase();await loadData();await migrateLegacy();await migrateItemIdentity();await migrateWeekendUnits();await initSync();await ensureToday();renderAll();tick();syncFocusTimer();setInterval(tick,1000);focusInterval=setInterval(syncFocusTimer,500);addEventListener("online",renderOnline);addEventListener("offline",renderOnline);addEventListener("focus",resumeForeground);addEventListener("pageshow",resumeForeground);document.addEventListener("visibilitychange",()=>{if(!document.hidden)resumeForeground();});registerServiceWorker();startSync();await checkReminder();}
 
 function bind(){
  $("item-form").addEventListener("click",e=>{if(e.target.closest('button[value="cancel"]')){e.preventDefault();$("item-dialog").close();}});
@@ -40,18 +40,18 @@ function bind(){
  $("profile-form").addEventListener("submit",saveProfile);$("accent-options").addEventListener("click",e=>{const b=e.target.closest("[data-accent]");if(b){config.accent=b.dataset.accent;applyAccent();renderSettings();}});
  ensureBackupUi();$("export-json").addEventListener("click",()=>exportJson());$("export-readable").addEventListener("click",exportReadable);$("import-json").addEventListener("change",importJson);$("backup-merge-start").addEventListener("click",()=>showBackupConfirmation("merge"));$("backup-restore-start").addEventListener("click",()=>showBackupConfirmation("restore"));$("backup-confirm-merge").addEventListener("click",confirmBackupMerge);$("backup-confirm-restore").addEventListener("click",confirmBackupRestore);$("backup-cancel-merge").addEventListener("click",()=>hideBackupConfirmation("merge"));$("backup-cancel-restore").addEventListener("click",()=>hideBackupConfirmation("restore"));$("backup-cancel-import").addEventListener("click",cancelBackupImport);
  $("clear-data").addEventListener("click",()=>{$("clear-confirm").hidden=false;$("clear-phrase").focus();});$("cancel-clear").addEventListener("click",()=>{$("clear-confirm").hidden=true;});$("confirm-clear").addEventListener("click",clearAll);
- $("share-feedback").addEventListener("click",shareFeedback);$("rollover-dialog").addEventListener("close",finishRollover);$("save-prompts").addEventListener("click",savePrompts);$("dismiss-reminder").addEventListener("click",dismissReminder);$("active-focus-bar").addEventListener("click",showFocusLayer);document.querySelectorAll("[data-focus-minutes]").forEach(b=>b.addEventListener("click",()=>setFocusDuration(Number(b.dataset.focusMinutes))));$("set-custom-focus").addEventListener("click",()=>setFocusDuration(Number($("custom-focus-minutes").value)));$("focus-start").addEventListener("click",startFocusTimer);$("focus-pause").addEventListener("click",pauseFocusTimer);$("focus-reset").addEventListener("click",resetFocusTimer);$("focus-back").addEventListener("click",backToToday);$("focus-break").addEventListener("click",startFocusBreak);$("focus-mark-done").addEventListener("click",markFocusedItemDone);
+ $("share-feedback").addEventListener("click",shareFeedback);bindSync();$("rollover-dialog").addEventListener("close",finishRollover);$("save-prompts").addEventListener("click",savePrompts);$("dismiss-reminder").addEventListener("click",dismissReminder);$("active-focus-bar").addEventListener("click",showFocusLayer);document.querySelectorAll("[data-focus-minutes]").forEach(b=>b.addEventListener("click",()=>setFocusDuration(Number(b.dataset.focusMinutes))));$("set-custom-focus").addEventListener("click",()=>setFocusDuration(Number($("custom-focus-minutes").value)));$("focus-start").addEventListener("click",startFocusTimer);$("focus-pause").addEventListener("click",pauseFocusTimer);$("focus-reset").addEventListener("click",resetFocusTimer);$("focus-back").addEventListener("click",backToToday);$("focus-break").addEventListener("click",startFocusBreak);$("focus-mark-done").addEventListener("click",markFocusedItemDone);
 }
 
 function defaultConfig(){return{key:"main",version:VERSION,name:"",initials:"",locationLabel:"",accent:"mint",milestoneEnabled:true,reminder:{enabled:false,time:"18:00"},focusTimer:null,moves:[],items:[],identityMigrated:false,launchers:DEFAULT_LAUNCHERS,updatedAt:Date.now(),lastDate:null,lastExportAt:null,weekendMigratedAt:null,migrated:false};}
 function blankDay(date,moves=config.moves){return{date,priorities:[],planned:[],moves:moves.filter(m=>m.enabled!==false).map(m=>({id:m.id,label:m.label,status:"pending",enabled:true,order:m.order})),focusSessions:[],conclusion:"",milestoneCelebrated:false,reminderShown:false,reminderDismissed:false,weekend:isWeekendKey(date),loggedAt:null,rolloverResolved:null,updatedAt:Date.now()};}
-function openDatabase(){return new Promise(resolve=>{if(!("indexedDB" in window)){fallback=true;resolve();return;}const r=indexedDB.open(DB_NAME,DB_VERSION);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains("config"))d.createObjectStore("config",{keyPath:"key"});if(!d.objectStoreNames.contains("days"))d.createObjectStore("days",{keyPath:"date"});};r.onsuccess=()=>{db=r.result;db.onversionchange=()=>db.close();resolve();};r.onerror=()=>{fallback=true;resolve();};});}
+function openDatabase(){return new Promise(resolve=>{if(!("indexedDB" in window)){fallback=true;resolve();return;}const r=indexedDB.open(DB_NAME,DB_VERSION);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains("config"))d.createObjectStore("config",{keyPath:"key"});if(!d.objectStoreNames.contains("days"))d.createObjectStore("days",{keyPath:"date"});if(!d.objectStoreNames.contains("sync"))d.createObjectStore("sync",{keyPath:"key"});};r.onsuccess=()=>{db=r.result;db.onversionchange=()=>db.close();resolve();};r.onerror=()=>{fallback=true;resolve();};});}
 async function loadData(){try{if(fallback){const raw=JSON.parse(localStorage.getItem("minimal.2.2.fallback")||"null");config=sanitizeConfig(raw?.config);days=Array.isArray(raw?.days)?raw.days.map(sanitizeDay).filter(Boolean):[];}else{config=sanitizeConfig(await idbGet("config","main"));days=(await idbAll("days")).map(sanitizeDay).filter(Boolean);}}catch{fallback=true;config=defaultConfig();days=[];showToast("Local database unavailable. Using temporary local storage.");}config=config||defaultConfig();config.lastExportAt=config.lastExportAt||localStorage.getItem("minimal.last-export")||null;applyAccent();}
 function idbGet(store,key){return new Promise((res,rej)=>{const r=db.transaction(store).objectStore(store).get(key);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
 function idbAll(store){return new Promise((res,rej)=>{const r=db.transaction(store).objectStore(store).getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
 function idbPut(store,value){return new Promise((res,rej)=>{const r=db.transaction(store,"readwrite").objectStore(store).put(value);r.onsuccess=()=>res();r.onerror=()=>rej(r.error);});}
-async function persistConfig(){config.updatedAt=Date.now();if(fallback)return saveFallback();try{await idbPut("config",config);}catch{fallback=true;saveFallback();}}
-async function persistDay(day){day.updatedAt=Date.now();const i=days.findIndex(d=>d.date===day.date);if(i<0)days.push(day);else days[i]=day;if(fallback)return saveFallback();try{await idbPut("days",day);}catch{fallback=true;saveFallback();}}
+async function persistConfig(){config.updatedAt=Date.now();syncAfterSave();if(fallback)return saveFallback();try{await idbPut("config",config);}catch{fallback=true;saveFallback();}}
+async function persistDay(day){day.updatedAt=Date.now();syncAfterSave();const i=days.findIndex(d=>d.date===day.date);if(i<0)days.push(day);else days[i]=day;if(fallback)return saveFallback();try{await idbPut("days",day);}catch{fallback=true;saveFallback();}}
 function saveFallback(){try{localStorage.setItem("minimal.2.2.fallback",JSON.stringify({config,days}));}catch{showToast("Changes could not be saved. Export a backup now.");}}
 
 async function migrateLegacy(){if(config.migrated)return;const keys=["minimal.private-beta.2.1","minimal.phone.state.v2","minimal.phone.state"];for(const key of keys){try{const old=JSON.parse(localStorage.getItem(key)||"null");if(!old)continue;const src=old.state||old;if(src.profile){config.name=text(src.profile.name,40);config.accent=ACCENTS[src.profile.accent]?src.profile.accent:config.accent;}if(Array.isArray(src.apps)){config.launchers=src.apps.slice(0,MAX_LAUNCHERS).map((a,i)=>({id:safeId(a.id,"app"),name:text(a.name,40)||"App",url:normalizeUrl(a.target||a.url)||"https://example.com/",symbol:text(a.symbol,3)||text(a.name,1).toUpperCase(),color:validColor(a.color)?a.color:"#9cffc8",pinned:Boolean(a.pinned),order:i}));}const today=getDay(todayKey())||blankDay(todayKey());if(Array.isArray(src.tasks)&&!today.priorities.length)today.priorities=src.tasks.slice(0,10).map((t,i)=>({id:safeId(t.id,"priority"),text:text(t.text||t.title,140),status:t.done||t.completed?"done":"pending",order:i}));if(text(src.priority,140)&&today.priorities.length<10)today.priorities.unshift({id:uid("priority"),text:text(src.priority,140),status:"pending",order:0});await persistDay(today);break;}catch{/* Ignore corrupt legacy state. */}}config.migrated=true;await persistConfig();}
@@ -149,12 +149,12 @@ function renderBackupMessages(id,messages){const list=$(id);list.replaceChildren
 function showBackupConfirmation(mode){if(!pendingBackup?.valid)return;$("backup-merge-confirmation").hidden=mode!=="merge";$("backup-restore-confirmation").hidden=mode!=="restore";if(mode==="restore"){$("backup-restore-phrase").value="";$("backup-restore-phrase").focus();}}
 function hideBackupConfirmation(mode){$(mode==="merge"?"backup-merge-confirmation":"backup-restore-confirmation").hidden=true;if(mode==="restore")$("backup-restore-phrase").value="";}
 function cancelBackupImport(){pendingBackup=null;const root=$("backup-preview");if(root)root.hidden=true;if($("backup-merge-confirmation"))$("backup-merge-confirmation").hidden=true;if($("backup-restore-confirmation"))$("backup-restore-confirmation").hidden=true;if($("backup-restore-phrase"))$("backup-restore-phrase").value="";$("backup-result")?.replaceChildren();if($("import-json"))$("import-json").value="";}
-async function confirmBackupMerge(){if(!pendingBackup?.valid)return;const result=mergeBackupIntoCurrent(pendingBackup.config,pendingBackup.days,pendingBackup.skipped);try{await writeDataset(result.config,result.days);config=result.config;days=result.days;await migrateWeekendUnits();hideBackupConfirmation("merge");$("backup-result").textContent=`Merge complete: ${result.imported} imported, ${result.duplicates} duplicates, ${result.conflicts} conflicts kept current, ${result.skipped} skipped.`;pendingBackup=null;$("backup-merge-start").disabled=true;$("backup-restore-start").disabled=true;applyAccent();renderAll();showToast("Backup merged. Existing conflicting records were kept.");}catch{showToast("Merge could not be saved. Current app data remains intact.");}}
-async function confirmBackupRestore(){if(!pendingBackup?.valid)return;if($("backup-restore-phrase").value!=="RESTORE MINIMAL")return showToast("Type RESTORE MINIMAL to confirm replacement.");const recoveryAt=initiateBackupExport("recovery");if(!recoveryAt)return;const restoredConfig=JSON.parse(JSON.stringify(pendingBackup.config));restoredConfig.lastExportAt=recoveryAt;try{await writeDataset(restoredConfig,pendingBackup.days);config=restoredConfig;days=pendingBackup.days;try{localStorage.setItem("minimal.last-export",recoveryAt);}catch{/* The restored config stores the date. */}location.reload();}catch{showToast("Restore could not be saved. Current app data remains intact; the recovery backup was downloaded.");}}
+async function confirmBackupMerge(){if(!pendingBackup?.valid)return;const result=mergeBackupIntoCurrent(pendingBackup.config,pendingBackup.days,pendingBackup.skipped);try{await writeDataset(result.config,result.days);config=result.config;days=result.days;await migrateWeekendUnits();syncAfterSave();hideBackupConfirmation("merge");$("backup-result").textContent=`Merge complete: ${result.imported} imported, ${result.duplicates} duplicates, ${result.conflicts} conflicts kept current, ${result.skipped} skipped.`;pendingBackup=null;$("backup-merge-start").disabled=true;$("backup-restore-start").disabled=true;applyAccent();renderAll();showToast("Backup merged. Existing conflicting records were kept.");}catch{showToast("Merge could not be saved. Current app data remains intact.");}}
+async function confirmBackupRestore(){if(!pendingBackup?.valid)return;if($("backup-restore-phrase").value!=="RESTORE MINIMAL")return showToast("Type RESTORE MINIMAL to confirm replacement.");const recoveryAt=initiateBackupExport("recovery");if(!recoveryAt)return;const restoredConfig=JSON.parse(JSON.stringify(pendingBackup.config));restoredConfig.lastExportAt=recoveryAt;try{await writeDataset(restoredConfig,pendingBackup.days);config=restoredConfig;days=pendingBackup.days;try{localStorage.setItem("minimal.last-export",recoveryAt);}catch{/* The restored config stores the date. */}await syncTrackNow();location.reload();}catch{showToast("Restore could not be saved. Current app data remains intact; the recovery backup was downloaded.");}}
 function mergeBackupIntoCurrent(incomingConfig,incomingDays,initialSkipped=0){const mergedConfig=JSON.parse(JSON.stringify(config)),mergedDays=JSON.parse(JSON.stringify(days)),counts={imported:0,duplicates:0,conflicts:0,skipped:initialSkipped};const currentItems=new Map((mergedConfig.items||[]).map(item=>[item.id,item])),preexistingItemIds=new Set(currentItems.keys());(incomingConfig.items||[]).forEach(item=>{const old=currentItems.get(item.id);if(!old){mergedConfig.items.push(item);currentItems.set(item.id,item);counts.imported++;}else if(JSON.stringify(old)===JSON.stringify(item))counts.duplicates++;else counts.conflicts++;});incomingConfig.moves.forEach(move=>{const old=mergedConfig.moves.find(existing=>existing.id===move.id);if(old){if(JSON.stringify(old)===JSON.stringify(move))counts.duplicates++;else counts.conflicts++;}else if(preexistingItemIds.has(move.id)){counts.conflicts++;}else if(mergedConfig.moves.length<10){mergedConfig.moves.push({...move,order:mergedConfig.moves.length});counts.imported++;}else{counts.skipped++;}});const currentByDate=new Map(mergedDays.map(day=>[day.date,day]));incomingDays.forEach(incoming=>{const current=currentByDate.get(incoming.date);if(!current){mergedDays.push(incoming);currentByDate.set(incoming.date,incoming);counts.imported+=Math.max(countDayRecords(incoming),1);return;}for(const key of ["priorities","planned","moves"]){const list=current[key],existing=new Map(list.map(record=>[record.id,record]));incoming[key].forEach(record=>{const old=existing.get(record.id);if(!old){if(list.length>=10){counts.skipped++;return;}list.push(record);existing.set(record.id,record);counts.imported++;}else if(JSON.stringify(old)===JSON.stringify(record))counts.duplicates++;else counts.conflicts++;});}const sessions=new Map((current.focusSessions||[]).map(session=>[session.id,session]));(incoming.focusSessions||[]).forEach(session=>{const old=sessions.get(session.id);if(!old){current.focusSessions.push(session);sessions.set(session.id,session);counts.imported++;}else if(JSON.stringify(old)===JSON.stringify(session))counts.duplicates++;else counts.conflicts++;});for(const key of ["conclusion","rolloverResolved"]){if(!current[key]&&incoming[key]){current[key]=incoming[key];counts.imported++;}else if(current[key]&&incoming[key]){if(current[key]===incoming[key])counts.duplicates++;else counts.conflicts++;}}for(const key of ["milestoneCelebrated","reminderShown","reminderDismissed"]){if(!current[key]&&incoming[key]){current[key]=true;counts.imported++;}}});mergedConfig.items=mergedConfig.items||[];mergedConfig.identityMigrated=true;return{config:mergedConfig,days:mergedDays,...counts};}
 function countDayRecords(day){return day.priorities.length+day.planned.length+day.moves.length+(day.focusSessions||[]).length+(day.conclusion?1:0);}
 function writeDataset(nextConfig,nextDays){if(fallback){localStorage.setItem("minimal.2.2.fallback",JSON.stringify({config:nextConfig,days:nextDays}));return Promise.resolve();}return new Promise((resolve,reject)=>{const transaction=db.transaction(["config","days"],"readwrite");transaction.oncomplete=()=>resolve();transaction.onerror=()=>reject(transaction.error||new Error("Storage transaction failed"));transaction.onabort=()=>reject(transaction.error||new Error("Storage transaction aborted"));transaction.objectStore("config").put(nextConfig);const store=transaction.objectStore("days");store.clear();nextDays.forEach(day=>store.put(day));});}
-async function clearAll(){if($("clear-phrase").value!=="DELETE MINIMAL")return showToast("Confirmation phrase does not match.");if(db){db.close();await new Promise(resolve=>{const r=indexedDB.deleteDatabase(DB_NAME);r.onsuccess=r.onerror=r.onblocked=resolve;});db=null;}localStorage.removeItem("minimal.2.2.fallback");localStorage.removeItem("minimal.last-export");localStorage.removeItem("minimal.accent");config=defaultConfig();days=[];fallback=false;await openDatabase();await persistConfig();await ensureToday();$("clear-confirm").hidden=true;$("clear-phrase").value="";$("focus-layer").hidden=true;document.body.classList.remove("focus-open");activeDate=defaultLogUnit();editable=true;renderAll();showToast("All Minimal data was permanently removed.");}
+async function clearAll(){if($("clear-phrase").value!=="DELETE MINIMAL")return showToast("Confirmation phrase does not match.");if(db){db.close();await new Promise(resolve=>{const r=indexedDB.deleteDatabase(DB_NAME);r.onsuccess=r.onerror=r.onblocked=resolve;});db=null;}localStorage.removeItem("minimal.2.2.fallback");localStorage.removeItem("minimal.last-export");localStorage.removeItem("minimal.accent");config=defaultConfig();days=[];fallback=false;await openDatabase();await syncReset();await persistConfig();await ensureToday();$("clear-confirm").hidden=true;$("clear-phrase").value="";$("focus-layer").hidden=true;document.body.classList.remove("focus-open");activeDate=defaultLogUnit();editable=true;renderAll();showToast("All Minimal data was permanently removed.");}
 async function shareFeedback(){const value=text($("feedback").value,1000,true);if(!value)return showToast("Write feedback first.");const body=`Minimal ${VERSION}\n${value}`;try{if(navigator.share)await navigator.share({title:"Minimal feedback",text:body});else if(navigator.clipboard)await navigator.clipboard.writeText(body);else throw new Error();showToast(navigator.share?"Feedback shared by you.":"Feedback copied.");}catch(e){if(e.name!=="AbortError")showToast("Sharing is unavailable. Copy the text manually.");}}
 
 function sanitizeFocusTimer(v){if(!v||typeof v!=="object"||!/^\d{4}-\d{2}-\d{2}$/.test(v.date)||!["priority","move","break"].includes(v.itemType))return null;const duration=clampInteger(v.duration,60,10800,1500),completed=Boolean(v.completed),running=!completed&&Boolean(v.running)&&Number.isFinite(Number(v.endAt));return{date:v.date,itemType:v.itemType,itemId:v.itemId?safeId(v.itemId,"item"):null,itemLabel:text(v.itemLabel,140)||"Focus session",duration,remaining:clampInteger(v.remaining,0,duration,duration),running,endAt:running?Number(v.endAt):null,completed,acknowledged:completed&&Boolean(v.acknowledged),sessionRecorded:Boolean(v.sessionRecorded),isBreak:v.itemType==="break"||Boolean(v.isBreak)};}
@@ -183,3 +183,137 @@ function showToast(message,duration=3200){clearTimeout(toastTimer);$("toast").te
 function registerServiceWorker(){if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"||location.hostname==="127.0.0.1"))addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(()=>showToast("Offline support could not start.")));}
 
 async function addPastMove(e){e.preventDefault();if(!editable||activeDate>=todayKey())return;const day=currentDay(),input=$("past-move-input"),label=text(input.value,80);if(!label)return;if(day.moves.length>=10)return showToast("The daily limit is 10 Small Moves.");if(day.moves.some(m=>m.label.toLowerCase()===label.toLowerCase()))return showToast("That Small Move is already listed.");day.moves.push({id:uid("move"),label,status:"pending",enabled:true,order:day.moves.length});input.value="";await persistDay(day);renderAll();}
+
+/* ---------- Cloudflare sync (see docs/SYNC.md) ----------
+ * The phone keeps its full copy in IndexedDB and works offline. Each save is
+ * queued by sync-client.js and uploaded when signed in and online. */
+let syncClient=null,syncTrackTimer=null,syncPushTimer=null,syncMessage="";
+const SYNC_FALLBACK_KEY="minimal.sync";
+const syncStore={
+  async get(){
+    if(fallback||!db){try{return JSON.parse(localStorage.getItem(SYNC_FALLBACK_KEY)||"null");}catch{return null;}}
+    try{return (await idbGet("sync","state"))?.value||null;}catch{return null;}
+  },
+  async set(value){
+    if(!fallback&&db){try{await idbPut("sync",{key:"state",value});return;}catch{/* fall through to localStorage */}}
+    try{localStorage.setItem(SYNC_FALLBACK_KEY,JSON.stringify(value));}catch{showToast("Sync state could not be saved on this phone.");}
+  }
+};
+const syncGetState=()=>({config,days});
+async function syncApplyState(next){
+  const nextConfig=sanitizeConfig(next.config),nextDays=next.days.map(sanitizeDay).filter(Boolean);
+  await writeDataset(nextConfig,nextDays);
+  config=nextConfig;days=nextDays;
+  applyAccent();renderAll();
+  return{config,days};
+}
+async function initSync(){
+  const lib=window.MinimalSyncClient;
+  if(!lib)return;
+  syncClient=new lib.SyncClient({fetch:(path,init)=>fetch(path,init),store:syncStore});
+  await syncClient.load();
+  syncClient.setBase(config,days);
+}
+function startSync(){
+  if(!syncClient)return;
+  addEventListener("online",()=>syncNow());
+  addEventListener("offline",renderSync);
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncNow();});
+  setInterval(()=>{if(!document.hidden)syncNow();},5*60*1000);
+  renderSync();
+  syncNow();
+}
+function syncAfterSave(){
+  if(!syncClient?.state)return;
+  clearTimeout(syncTrackTimer);
+  syncTrackTimer=setTimeout(async()=>{
+    await syncClient.track(config,days);
+    renderSync();
+    clearTimeout(syncPushTimer);
+    syncPushTimer=setTimeout(syncNow,2000);
+  },250);
+}
+async function syncTrackNow(){
+  if(!syncClient?.state)return;
+  clearTimeout(syncTrackTimer);
+  await syncClient.track(config,days);
+}
+async function syncNow(){
+  if(!syncClient?.state?.signedIn||!navigator.onLine)return renderSync();
+  try{await syncClient.sync(syncGetState,syncApplyState);syncMessage="";}
+  catch(error){syncMessage=error.offline?"Offline. Changes are saved on this phone and will sync later.":error.message;}
+  renderSync();
+}
+function isFreshDevice(){
+  return !config.name&&!(config.moves||[]).length&&!days.some(d=>isLogged(d)||d.priorities.length||d.planned.length||d.conclusion);
+}
+async function runFirstSync(){
+  const fresh=isFreshDevice();
+  if(!fresh){
+    const at=initiateBackupExport("pre-sync");
+    if(!at)throw new Error("The safety backup could not be saved, so nothing was uploaded.");
+    try{localStorage.setItem("minimal.backup.pre-sync",JSON.stringify(buildBackup(at)));}catch{/* the downloaded file is the backup */}
+  }
+  await syncClient.firstSync(syncGetState,syncApplyState,{fresh});
+  syncMessage=fresh?"Downloaded your data from Cloudflare.":"Uploaded this phone's data to Cloudflare.";
+}
+async function signInToSync(e){
+  e.preventDefault();
+  const input=$("sync-passcode"),button=$("sync-signin"),passcode=input.value;
+  if(!passcode)return;
+  button.disabled=true;
+  try{
+    await syncClient.login(passcode);
+    if(!syncClient.state.firstSyncAt)await runFirstSync();else await syncNow();
+    showToast("Signed in. Sync is on.");
+  }catch(error){
+    syncMessage=error.status===404||error.status===405?"Sync is not available at this address. Open the Cloudflare version of Minimal.":error.status===401?"Wrong passcode.":error.message;
+  }finally{
+    input.value="";button.disabled=false;renderSync();
+  }
+}
+async function uploadAgain(){
+  try{await runFirstSync();}catch(error){syncMessage=error.message;}
+  renderSync();
+}
+async function signOutOfSync(everywhere){
+  try{await syncClient.logout(everywhere);syncMessage=everywhere?"Signed out on every device.":"Signed out. Changes stay on this phone.";}
+  catch(error){syncMessage=error.message;}
+  renderSync();
+}
+async function syncReset(){
+  if(!syncClient)return;
+  try{await syncClient.logout();}catch{/* offline or already signed out */}
+  await syncClient.reset();
+  syncClient.setBase(config,days);
+}
+async function dismissConflicts(){
+  try{await syncClient.dismissConflicts(syncClient.state.conflicts.map(c=>c.id));}catch(error){syncMessage=error.message;}
+  renderSync();
+}
+function bindSync(){
+  $("sync-signin-form").addEventListener("submit",signInToSync);
+  $("sync-now").addEventListener("click",()=>syncNow());
+  $("sync-upload-again").addEventListener("click",uploadAgain);
+  $("sync-signout").addEventListener("click",()=>signOutOfSync(false));
+  $("sync-signout-all").addEventListener("click",()=>signOutOfSync(true));
+  $("sync-dismiss-conflicts").addEventListener("click",dismissConflicts);
+}
+function describeConflict(c){
+  const show=v=>v===null?"deleted":c.entity==="item"?`“${v.text||v.label}” ${v.status}`:c.entity==="note"?`“${String(v).slice(0,60)}”`:c.entity==="setting"?"a different value":"a change";
+  const date=c.key.slice(0,10),where=c.entity==="setting"?`Setting “${c.key}”`:validDateKey(date)?(isWeekendKey(unitKey(date))?`Weekend of ${unitDateText(unitKey(date))}`:formatDate(date)):c.entity;
+  return `${where}: kept ${show(c.kept)}, replaced ${show(c.lost)}.`;
+}
+function renderSync(){
+  if(!syncClient?.state||!$("sync-panel"))return;
+  const s=syncClient.state,n=syncClient.pending,waiting=`${n} change${n===1?"":"s"} waiting`;
+  const last=s.lastSyncAt?new Date(s.lastSyncAt).toLocaleString(undefined,{dateStyle:"medium",timeStyle:"short"}):"not yet";
+  $("sync-signin-form").hidden=s.signedIn;
+  $("sync-signed-in").hidden=!s.signedIn;
+  $("sync-status").textContent=s.signedIn?`${navigator.onLine?"Signed in":"Offline"} · Last synced ${last} · ${waiting}`:s.firstSyncAt?`Signed out · ${waiting} on this phone`:"Not signed in. Your data is only on this phone.";
+  $("sync-message").textContent=syncMessage;
+  const list=$("sync-conflicts");
+  list.replaceChildren(...s.conflicts.map(c=>{const li=document.createElement("li");li.textContent=describeConflict(c);return li;}));
+  $("sync-conflict-count").textContent=`(${s.conflicts.length})`;
+  $("sync-conflicts-box").hidden=!s.conflicts.length;
+}

@@ -16,23 +16,39 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
 
     steps:
       - name: Check out repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dev dependencies
+        run: npm ci --no-audit --no-fund
 
       - name: Check JavaScript syntax
         run: |
           node --check logic.js
           node --check script.js
           node --check service-worker.js
+          node --check sync-core.js
+          node --check sync-client.js
+          node --check api/app.js
 
       - name: Run tests
         run: |
-          node --test tests/logic.test.js
+          node --test tests/logic.test.js tests/sync-core.test.mjs
           node tests/history.cjs
           node tests/rollover.cjs
+          npx vitest run
+
+      - name: Build the Cloudflare Pages output
+        run: npm run build
 
       - name: Validate manifest and HTML invariants
         run: |
