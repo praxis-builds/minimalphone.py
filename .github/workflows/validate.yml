@@ -45,6 +45,7 @@ jobs:
           node --test tests/logic.test.js tests/sync-core.test.mjs
           node tests/history.cjs
           node tests/rollover.cjs
+          node tests/service-worker.cjs
           npx vitest run
 
       - name: Build the Cloudflare Pages output
