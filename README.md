@@ -109,6 +109,7 @@ The tests need Node.js 20 or newer and have no dependencies:
 ```bash
 node --test tests/logic.test.js
 node tests/history.cjs
+node tests/rollover.cjs
 ```
 
 `tests/logic.test.js` covers the default day (with the clock mocked, including Mondays), today being locked, the Weekend merge, and the percentage maths with today excluded.

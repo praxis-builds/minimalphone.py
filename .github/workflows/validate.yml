@@ -32,6 +32,7 @@ jobs:
         run: |
           node --test tests/logic.test.js
           node tests/history.cjs
+          node tests/rollover.cjs
 
       - name: Validate manifest and HTML invariants
         run: |
