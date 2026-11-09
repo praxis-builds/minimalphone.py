@@ -28,6 +28,12 @@ Run these from the repository folder.
    npx wrangler login
    ```
 
+   If your Cloudflare login can see more than one account, pick the one to use for every command below:
+
+   ```bash
+   export CLOUDFLARE_ACCOUNT_ID=<account id from `npx wrangler whoami`>
+   ```
+
 3. **Create the database** and copy the `database_id` it prints into `wrangler.toml` (replace the zeros):
 
    ```bash
@@ -58,7 +64,7 @@ Run these from the repository folder.
    npm run deploy
    ```
 
-   This builds `dist/` and runs `wrangler pages deploy`. Wrangler prints the address, for example `https://minimal.pages.dev`.
+   This builds `dist/` and runs `wrangler pages deploy`. Wrangler prints the address. If the name is taken on pages.dev, Cloudflare adds a suffix (this project is `https://minimal-apz.pages.dev`).
 
 Check it: `https://<your address>/api/session` should answer `{"error":"sign in required"}` with status 401.
 

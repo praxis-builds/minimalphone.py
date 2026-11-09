@@ -10,6 +10,6 @@ enabled = false
 [[d1_databases]]
 binding = "DB"
 database_name = "minimal"
-# Filled in after `npx wrangler d1 create minimal` (docs/SYNC.md step 3).
-database_id = "00000000-0000-0000-0000-000000000000"
+# The "minimal" database in the Wobbly Marshmallow account (created 2026-11-09).
+database_id = "547e3ee2-c3ba-43f3-82cf-abe0be467f1b"
 migrations_dir = "migrations"
