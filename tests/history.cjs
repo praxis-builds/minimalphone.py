@@ -11,7 +11,9 @@ renderToday=()=>{};renderAll=()=>{};renderHistory=()=>{};showView=()=>{};showToa
 config=defaultConfig();fallback=true;
 config.moves=[{id:"read",label:"Read",enabled:true,order:0}];
 const today=blankDay(dateKey());days=[today];
-const before=JSON.stringify(today),settings=JSON.stringify(config);
+// The item registry (config.items) records identities for Patterns and may grow; user settings must not change.
+const settingsOf=c=>JSON.stringify({...c,items:undefined,updatedAt:undefined});
+const before=JSON.stringify(today),settings=settingsOf(config);
 const past=shiftDate(dateKey(),-5);
 openHistoricalDay(past);
 if(days.length!==1)throw Error("Browsing saved an empty day");
@@ -30,7 +32,7 @@ historical.moves[0].status="done";historical.priorities[0].status="done";
 await persistDay(historical);
 if(score([...historical.moves,...historical.priorities]).percent!==67)throw Error("Score failed");
 if(JSON.stringify(getDay(dateKey()))!==before)throw Error("Today changed");
-if(JSON.stringify(config)!==settings)throw Error("Settings changed");
+if(settingsOf(config)!==settings)throw Error("Settings changed");
 if(sanitizeDay(historical).moves.length!==2)throw Error("Backup roundtrip lost moves");
 const selected=activeDate;
 openHistoricalDay("2026-02-30");if(activeDate!==selected)throw Error("Invalid date accepted");
