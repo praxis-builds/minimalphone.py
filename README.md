@@ -8,6 +8,8 @@ It is an installable Progressive Web App (PWA) that keeps priorities, Small Move
 
 ## What Minimal includes
 
+- Log yesterday, plan today: a day is logged once it is over
+- Saturday and Sunday logged together as one Weekend
 - Dated daily priorities with up to 10 items
 - Up to 10 configurable Small Moves
 - Pending, completed, and skipped daily states
@@ -16,7 +18,7 @@ It is an installable Progressive Web App (PWA) that keeps priorities, Small Move
 - Read-only history with deliberate historical editing
 - History date picker to fill in missed days, including days never opened
 - Add, edit, remove, and mark Small Moves on a past date without changing daily settings
-- Yearly statistics, streaks, strongest month, and monthly progress
+- Week, month and year statistics, streaks, strongest month, and monthly progress
 - Up to 30 configurable launcher entries
 - Item-attached 25/50/custom focus timer with local session history
 - Optional 5-minute break timer
@@ -24,6 +26,25 @@ It is an installable Progressive Web App (PWA) that keeps priorities, Small Move
 - JSON backup and restore
 - Installable iPhone Home Screen experience
 - Offline access after the first successful load
+
+## Logging days
+
+A day can only be logged once it is over.
+
+- **Minimal opens on the most recent finished day.** Usually that is yesterday. On Monday it is the Weekend. On Saturday and Sunday it is Friday.
+- **Today is for planning.** You can add, edit and reorder priorities, use Plan Tomorrow and run the focus timer. Marking items done or skipped and writing the conclusion stay locked ("Log this tomorrow, once the day is done."). Use **Plan today** / **Log yesterday** at the top of the day to switch between them.
+- **Earlier days can be filled in at any time.** History lists every past day since your first record, and **Fill in a missed day** opens any past date. Choose **Edit this day** to log it. A day with no record is shown as **Not logged**. A logged day at 0% is **Missed**. These are different: not-logged days are counted but are left out of averages.
+- **Today and future days never count** toward any percentage or streak.
+
+### The Weekend
+
+Saturday and Sunday are one unit called **Weekend**. It is logged once, opens for logging on Monday, and counts as one day in every stat, so a normal week has 6 units: Monday to Friday plus the Weekend. A Weekend belongs to the month and year that contain its Saturday. Streaks run Friday → Weekend → Monday.
+
+Weekend records are stored under Saturday's date. When this version first runs, older Saturday and Sunday records are merged:
+
+- Before anything changes, a full copy of the stored data is saved in browser storage under `minimal.backup.pre-weekend`. If that copy cannot be saved, the merge is postponed.
+- An item is done if it was done on either day. Plans, focus sessions and both conclusions are kept (as `Sat: …` / `Sun: …`).
+- The merge is safe to run more than once. It also runs after you merge in a JSON backup, so older backups import cleanly.
 
 ## Privacy model
 
@@ -81,11 +102,24 @@ Stop the server with `Ctrl+C`.
 
 Do not open `index.html` directly with a `file://` URL when testing service workers or browser storage behavior.
 
+### Tests
+
+The tests need Node.js 20 or newer and have no dependencies:
+
+```bash
+node --test tests/logic.test.js
+node tests/history.cjs
+```
+
+`tests/logic.test.js` covers the default day (with the clock mocked, including Mondays), today being locked, the Weekend merge, and the percentage maths with today excluded.
+
 ## Project structure
 
 - `index.html` — application structure
 - `style.css` — responsive visual system
 - `script.js` — application state and behavior
+- `logic.js` — pure date, Weekend, scoring and merge logic, shared with the tests
+- `tests/` — unit and regression tests (see [Tests](#tests))
 - `manifest.webmanifest` — PWA metadata
 - `service-worker.js` — offline application shell
 - `icon.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` — app icons

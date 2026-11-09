@@ -24,8 +24,14 @@ jobs:
 
       - name: Check JavaScript syntax
         run: |
+          node --check logic.js
           node --check script.js
           node --check service-worker.js
+
+      - name: Run tests
+        run: |
+          node --test tests/logic.test.js
+          node tests/history.cjs
 
       - name: Validate manifest and HTML invariants
         run: |
