@@ -1,4 +1,4 @@
-const CACHE_NAME = "minimal-daily-os-1.2.0-log-yesterday-1";
+const CACHE_NAME = "minimal-daily-os-1.2.0-weekend-1";
 
 const APP_SHELL = [
     "./",

@@ -5,12 +5,14 @@
  * Loaded by the browser before script.js (as window.MinimalLogic) and by the
  * Node test suite via require(). No DOM or storage access lives here.
  *
- * A "unit" is what gets logged once and counts once in every stat. For now
- * every calendar day is its own unit, keyed by its date. A unit can only be
- * logged after it has fully ended, so today and the future are read-only.
+ * A "unit" is what gets logged once and counts once in every stat:
+ *   - Monday to Friday: one unit each, keyed by its own date.
+ *   - Saturday + Sunday: one "Weekend" unit, keyed by Saturday's date.
+ * A unit can only be logged after it has fully ended (Weekend opens on Monday).
  */
 (function (root) {
   const CONCLUSION_MAX = 500;
+  const WEEKEND_CONCLUSION_MAX = 1000;
 
   function dateKey(date = new Date()) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -32,14 +34,15 @@
   }
 
   /* Unit helpers */
-  function isWeekendKey() {
-    return false;
+  function isWeekendKey(k) {
+    return weekday(k) === 6;
   }
   function unitKey(k) {
-    return k;
+    return weekday(k) === 0 ? shiftDate(k, -1) : k;
   }
   function unitEnd(k) {
-    return unitKey(k);
+    const u = unitKey(k);
+    return isWeekendKey(u) ? shiftDate(u, 1) : u;
   }
   function nextUnit(k) {
     return unitKey(shiftDate(unitEnd(k), 1));
@@ -51,7 +54,7 @@
   function currentUnit(now = new Date()) {
     return unitKey(dateKey(now));
   }
-  /** The most recent unit that has fully ended: yesterday. */
+  /** The most recent unit that has fully ended: yesterday, or the Weekend on Monday. */
   function defaultLogUnit(now = new Date()) {
     return prevUnit(currentUnit(now));
   }
@@ -59,13 +62,17 @@
   function canLogUnit(k, now = new Date()) {
     return unitEnd(k) < dateKey(now);
   }
-  /** Units from start to end inclusive (both normalised to unit keys). */
+  /**
+   * Units whose key falls in [start, end]. A Weekend belongs to the period
+   * that contains its Saturday, so a range starting on a Sunday skips the
+   * Weekend that began the day before.
+   */
   function unitsBetween(start, end) {
     const out = [];
-    for (let u = unitKey(start), last = unitKey(end); u <= last; u = nextUnit(u)) out.push(u);
+    for (let u = unitKey(start) < start ? nextUnit(start) : start; u <= end; u = nextUnit(u)) out.push(u);
     return out;
   }
-  /** Monday-start week containing k. */
+  /** Monday-start week containing k: 6 units (Mon–Fri + Weekend). */
   function weekUnits(k) {
     const offset = (weekday(k) + 6) % 7;
     return unitsBetween(shiftDate(k, -offset), shiftDate(k, 6 - offset));
@@ -153,8 +160,88 @@
     return { current, longest };
   }
 
+  /* Weekend merge */
+  const RANK = { pending: 0, skipped: 1, done: 2 };
+  function mergeItems(a = [], b = [], key) {
+    const out = a.map((x) => ({ ...x })),
+      find = (x) =>
+        out.find((y) => (x.id && y.id === x.id) || String(y[key] || "").toLowerCase() === String(x[key] || "").toLowerCase());
+    for (const x of b) {
+      const hit = find(x);
+      if (!hit) out.push({ ...x });
+      else if ((RANK[x.status] || 0) > (RANK[hit.status] || 0)) hit.status = x.status;
+      if (hit && x.enabled !== false && hit.enabled === false) hit.enabled = true;
+    }
+    return out.map((x, i) => ({ ...x, order: i }));
+  }
+  function mergeConclusions(sat, sun, max = WEEKEND_CONCLUSION_MAX) {
+    const a = String(sat || "").trim(),
+      b = String(sun || "").trim();
+    if (!b || a.includes(b)) return a.slice(0, max);
+    if (!a) return b.slice(0, max);
+    const saturdayPart = /^Sat: /.test(a) ? a : `Sat: ${a}`;
+    return `${saturdayPart}\nSun: ${b}`.slice(0, max);
+  }
+  /** Merge a Saturday and a Sunday record into one Weekend record keyed by Saturday. */
+  function mergeWeekendPair(sat, sun) {
+    const satKey = sat ? sat.date : unitKey(sun.date);
+    if (!sat) return { ...sun, date: satKey, weekend: true };
+    if (!sun) return { ...sat, weekend: true };
+    const seen = new Set(),
+      sessions = [...(sat.focusSessions || []), ...(sun.focusSessions || [])].filter((s) => {
+        const k = s.id || JSON.stringify(s);
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
+    return {
+      ...sat,
+      date: satKey,
+      weekend: true,
+      priorities: mergeItems(sat.priorities, sun.priorities, "text").slice(0, 10),
+      moves: mergeItems(sat.moves, sun.moves, "label").slice(0, 10),
+      // Sunday's plan is the plan for Monday, so it leads.
+      planned: mergeItems(sun.planned, sat.planned, "text").slice(0, 10),
+      focusSessions: sessions,
+      conclusion: mergeConclusions(sat.conclusion, sun.conclusion),
+      loggedAt: sat.loggedAt || sun.loggedAt || null,
+      milestoneCelebrated: Boolean(sat.milestoneCelebrated || sun.milestoneCelebrated),
+      rolloverResolved: sun.rolloverResolved || sat.rolloverResolved || null,
+      updatedAt: Math.max(Number(sat.updatedAt) || 0, Number(sun.updatedAt) || 0) || Date.now(),
+    };
+  }
+  /**
+   * Fold every Sunday record into its Saturday. Idempotent: running it on
+   * already-merged data returns changed=false and the same records.
+   * Returns { days, changed, removed: [sunday keys], written: [weekend records] }.
+   */
+  function migrateWeekends(days) {
+    const byKey = new Map(days.map((d) => [d.date, d])),
+      removed = [],
+      written = [];
+    for (const d of days) {
+      const wd = weekday(d.date);
+      if (wd === 0) {
+        const satKey = shiftDate(d.date, -1),
+          merged = mergeWeekendPair(byKey.get(satKey), d);
+        byKey.set(satKey, merged);
+        byKey.delete(d.date);
+        removed.push(d.date);
+      } else if (wd === 6 && !d.weekend) {
+        byKey.set(d.date, { ...byKey.get(d.date), weekend: true });
+      }
+    }
+    for (const d of byKey.values()) {
+      const before = days.find((x) => x.date === d.date);
+      if (before !== d) written.push(d);
+    }
+    const next = [...byKey.values()].sort((a, b) => a.date.localeCompare(b.date));
+    return { days: next, changed: removed.length > 0 || written.length > 0, removed, written };
+  }
+
   const api = {
     CONCLUSION_MAX,
+    WEEKEND_CONCLUSION_MAX,
     dateKey,
     parseDate,
     shiftDate,
@@ -175,6 +262,8 @@
     unitState,
     summarizeUnits,
     unitStreaks,
+    mergeWeekendPair,
+    migrateWeekends,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.MinimalLogic = api;
