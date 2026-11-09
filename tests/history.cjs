@@ -4,6 +4,7 @@ const assert=require('node:assert/strict');
 const elements=new Map();
 const element=id=>{if(!elements.has(id))elements.set(id,{value:'',textContent:'',hidden:false});return elements.get(id);};
 const context=vm.createContext({console,Date,Map,Set,URL,crypto:require('node:crypto').webcrypto,setTimeout,clearTimeout,document:{addEventListener(){},getElementById:element},localStorage:{setItem(){}},scrollTo(){}});
+vm.runInContext(readFileSync('logic.js','utf8'),context);
 vm.runInContext(readFileSync('script.js','utf8'),context);
 vm.runInContext(`
 renderToday=()=>{};renderAll=()=>{};renderHistory=()=>{};showView=()=>{};showToast=()=>{};

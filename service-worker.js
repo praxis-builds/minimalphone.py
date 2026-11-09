@@ -1,9 +1,10 @@
-const CACHE_NAME = "minimal-daily-os-1.1.0-backup-1";
+const CACHE_NAME = "minimal-daily-os-1.2.0-log-yesterday-1";
 
 const APP_SHELL = [
     "./",
     "./index.html",
     "./style.css",
+    "./logic.js",
     "./script.js",
     "./manifest.webmanifest",
     "./icon.svg",

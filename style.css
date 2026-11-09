@@ -232,3 +232,21 @@ button {
 
 .backup-due{color:#ffc56e}.backup-preview{margin-top:1rem;padding:1rem;border:1px solid var(--line);border-radius:14px;background:var(--raised)}.backup-preview h3{margin:.1rem 0 .8rem;font-size:1rem}.backup-preview-details{display:grid;grid-template-columns:minmax(7.5rem,auto) 1fr;gap:.35rem .8rem;margin:.5rem 0 1rem}.backup-preview-details dt{color:var(--muted)}.backup-preview-details dd{margin:0;overflow-wrap:anywhere}.backup-preview ul{margin:.35rem 0 1rem;padding-left:1.25rem;color:var(--muted);font-size:.85rem}.backup-actions{display:flex;flex-wrap:wrap;gap:.55rem;margin-top:.8rem}.backup-confirmation{margin-top:.8rem;padding:.85rem;border:1px solid var(--line);border-radius:12px}.backup-confirmation label{margin:.8rem 0}.backup-confirmation .button-row button{flex:1 1 12rem}#backup-result:empty{display:none}
 @media(max-width:600px){.backup-preview{padding:.8rem}.backup-preview-details{grid-template-columns:1fr;gap:.1rem}.backup-preview-details dd{margin-bottom:.45rem}.backup-actions{display:grid;grid-template-columns:1fr}.backup-confirmation .button-row{display:grid;grid-template-columns:1fr}.backup-confirmation .button-row button{width:100%}}
+
+/* Log yesterday: today is open for planning, not for logging */
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-top: .75rem;
+}
+
+.history-card.notlogged,
+.history-card.open {
+    border-style: dashed;
+    color: var(--muted);
+}
+
+.history-card.missed .history-score {
+    color: var(--muted);
+}
