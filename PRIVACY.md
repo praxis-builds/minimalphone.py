@@ -31,7 +31,7 @@ When Sync is on:
 - **Where it is stored:** in the Cloudflare D1 database bound to that deployment, in the deployer's own Cloudflare account. Cloudflare processes it under the deployer's agreement with Cloudflare. Praxis Builds has no access to it.
 - **Encryption:** traffic uses HTTPS and Cloudflare encrypts stored data at rest. Records are **not end-to-end encrypted**: the server can read them, because it has to merge edits from different phones and check whether a day was logged.
 - **Sign-in:** the passcode is a Cloudflare secret and is never stored in the app or the repository. A sign-in creates a random session token, sent back as an HttpOnly, Secure, SameSite=Strict cookie that lasts 180 days and renews with use. The database stores only a SHA-256 hash of that token. After 10 wrong passcodes, sign-in is locked for 15 minutes. No IP addresses are stored.
-- **Logs:** the API does not write request bodies or entries to logs, and Workers logs are turned off for the project. Cloudflare may still keep standard request metadata for its own operation.
+- **Logs:** the API writes nothing about requests or entries to logs. Live log streaming for the project, if someone with access to the Cloudflare account turns it on, shows only request metadata such as paths and status codes, never request bodies. Cloudflare may still keep standard request metadata for its own operation.
 - **Conflicts:** when two phones change the same item while apart, both values are kept in the database's conflict list until dismissed in Settings.
 - **Deletion:** "Clear all data" removes the copy on the current phone and signs it out; it does not delete the server copy. To delete the server copy, follow the steps in [docs/SYNC.md](docs/SYNC.md).
 
