@@ -1,4 +1,4 @@
-const CACHE_NAME = "minimal-daily-os-1.4.3-settings-1";
+const CACHE_NAME = "minimal-daily-os-1.5.0-permanent-1";
 
 const APP_SHELL = [
     "./",

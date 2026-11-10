@@ -239,6 +239,33 @@
     return { days: next, changed: removed.length > 0 || written.length > 0, removed, written };
   }
 
+  /* Permanent priorities */
+  /** Permanent priorities that apply on `date`: started on or before it, not retired by it. */
+  function activePermanentsOn(list, date) {
+    return (list || [])
+      .filter((p) => (!p.activeFrom || p.activeFrom <= date) && (!p.retiredOn || date < p.retiredOn))
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  }
+  /**
+   * Priorities a new day starts with: active permanent ones first, in order,
+   * then what was planned the evening before. Duplicates (same id or same
+   * text) appear once; at most `max` items.
+   */
+  function composeNewDayPriorities(permanents, planned, date, max = 10) {
+    const out = [],
+      seen = new Set(),
+      add = (id, text) => {
+        const key = String(text || "").trim().toLowerCase();
+        if (out.length >= max || seen.has(`id:${id}`) || seen.has(`t:${key}`)) return;
+        seen.add(`id:${id}`);
+        seen.add(`t:${key}`);
+        out.push({ id, text, status: "pending", order: out.length });
+      };
+    for (const p of activePermanentsOn(permanents, date)) add(p.id, p.text);
+    for (const p of planned || []) add(p.id, p.text);
+    return out;
+  }
+
   const api = {
     CONCLUSION_MAX,
     WEEKEND_CONCLUSION_MAX,
@@ -262,6 +289,8 @@
     unitState,
     summarizeUnits,
     unitStreaks,
+    activePermanentsOn,
+    composeNewDayPriorities,
     mergeWeekendPair,
     migrateWeekends,
   };

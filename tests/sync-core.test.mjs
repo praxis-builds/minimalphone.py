@@ -50,3 +50,10 @@ test("latest edit wins; ties are broken by device id, never randomly", () => {
   assert.equal(wins({ updatedAt: 1, deviceId: "b" }, { updatedAt: 1, deviceId: "a" }), true);
   assert.equal(wins({ updatedAt: 1, deviceId: "a" }, { updatedAt: 1, deviceId: "a" }), false);
 });
+
+test("permanent priorities sync as their own setting and survive a round trip", () => {
+  const permanent = [{ id: "perm-plan", text: "Plan the day", order: 0, activeFrom: "2026-11-01", retiredOn: null }];
+  const records = explode({ ...sample.config, permanent }, []);
+  assert.deepEqual(records.get("setting:permanent").value, permanent);
+  assert.deepEqual(implode(records, {}, []).config.permanent, permanent);
+});

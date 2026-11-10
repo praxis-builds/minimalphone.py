@@ -12,6 +12,7 @@ It is an installable Progressive Web App (PWA) that keeps priorities, Small Move
 - Saturday and Sunday logged together as one Weekend
 - Dated daily priorities with up to 10 items
 - Up to 10 configurable Small Moves
+- Permanent priorities: a fixed list every new day starts with (Settings → Permanent priorities); retire one to stop it on new days while past days keep it
 - Pending, completed, and skipped daily states
 - 80/20 daily scoring
 - Plan Tomorrow and new-day rollover
@@ -113,7 +114,7 @@ The tests need Node.js 22 or newer. Install the dev tools once with `npm ci`, th
 npm test
 ```
 
-That runs `tests/logic.test.js` and `tests/sync-core.test.mjs` (Node), `tests/history.cjs`, `tests/rollover.cjs` and `tests/service-worker.cjs` (regression checks), and `tests/api/` (Vitest inside the Cloudflare Workers runtime against a temporary local D1 database). The API tests cover: calls without a valid session get 401, sign-in and lockout, offline edits syncing, latest-edit-wins with the conflict log, and the first upload running twice safely.
+That runs `tests/logic.test.js` and `tests/sync-core.test.mjs` (Node), `tests/history.cjs`, `tests/rollover.cjs`, `tests/service-worker.cjs` and `tests/permanent.cjs` (regression checks), and `tests/api/` (Vitest inside the Cloudflare Workers runtime against a temporary local D1 database). The API tests cover: calls without a valid session get 401, sign-in and lockout, offline edits syncing, latest-edit-wins with the conflict log, and the first upload running twice safely.
 
 `tests/logic.test.js` covers the default day (with the clock mocked, including Mondays), today being locked, the Weekend merge, and the percentage maths with today excluded.
 

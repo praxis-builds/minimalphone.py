@@ -226,3 +226,38 @@ describe("percentages: units, today excluded", () => {
     assert.equal(L.unitStreaks(days, now).current, 2);
   });
 });
+
+describe("permanent priorities", () => {
+  const permanents = [
+    { id: "perm-plan", text: "Plan the day", order: 0, activeFrom: "2026-11-01", retiredOn: null },
+    { id: "perm-inbox", text: "Inbox zero", order: 1, activeFrom: "2026-11-10", retiredOn: null },
+    { id: "perm-old", text: "Stretch", order: 2, activeFrom: "2026-10-01", retiredOn: "2026-11-12" },
+  ];
+  test("a new day starts with the permanent priorities active on that date, in order", () => {
+    const day = L.composeNewDayPriorities(permanents, [], "2026-11-11");
+    assert.deepEqual(day.map((p) => p.text), ["Plan the day", "Inbox zero", "Stretch"]);
+    assert.ok(day.every((p) => p.status === "pending"));
+    assert.deepEqual(day.map((p) => p.order), [0, 1, 2]);
+  });
+  test("a retired priority stops on new days from its retire date; earlier days keep it", () => {
+    assert.deepEqual(L.activePermanentsOn(permanents, "2026-11-11").map((p) => p.id), ["perm-plan", "perm-inbox", "perm-old"]);
+    assert.deepEqual(L.activePermanentsOn(permanents, "2026-11-12").map((p) => p.id), ["perm-plan", "perm-inbox"]);
+  });
+  test("one added later does not appear on days before it started", () => {
+    assert.deepEqual(L.activePermanentsOn(permanents, "2026-11-05").map((p) => p.id), ["perm-plan", "perm-old"]);
+  });
+  test("Plan Tomorrow extras still carry over, after the permanent ones", () => {
+    const day = L.composeNewDayPriorities(permanents, [{ id: "p-flights", text: "Book flights" }], "2026-11-16");
+    assert.deepEqual(day.map((p) => p.text), ["Plan the day", "Inbox zero", "Book flights"]);
+  });
+  test("a planned item that repeats a permanent one appears once", () => {
+    const day = L.composeNewDayPriorities(permanents, [{ id: "other", text: "plan the day " }, { id: "perm-inbox", text: "Inbox zero" }], "2026-11-16");
+    assert.deepEqual(day.map((p) => p.id), ["perm-plan", "perm-inbox"]);
+  });
+  test("the day still holds at most 10 priorities, permanent ones first", () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({ id: `x${i}`, text: `Planned ${i}` }));
+    const day = L.composeNewDayPriorities(permanents, many, "2026-11-16");
+    assert.equal(day.length, 10);
+    assert.deepEqual(day.slice(0, 2).map((p) => p.id), ["perm-plan", "perm-inbox"]);
+  });
+});
