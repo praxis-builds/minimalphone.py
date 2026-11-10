@@ -52,6 +52,7 @@ jobs:
           node tests/permanent.cjs
           node tests/review.cjs
           node tests/skip.cjs
+          node tests/target.cjs
           npx vitest run
 
       - name: Build the Cloudflare Pages output

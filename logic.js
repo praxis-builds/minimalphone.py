@@ -14,6 +14,8 @@
   const CONCLUSION_MAX = 500;
   const WEEKEND_CONCLUSION_MAX = 1000;
   const REVIEW_MAX = 300;
+  /** Default yearly target: the average logged day the year should reach. */
+  const YEAR_TARGET = 80;
   /** One-tap reasons for a skipped item. Optional: a skip can have none. */
   const SKIP_REASONS = { tired: "Tired", work: "Work", forgot: "Forgot", unimportant: "Didn't matter" };
 
@@ -196,6 +198,19 @@
     return [...counts].map(([reason, count]) => ({ reason, count })).sort((a, b) => b.count - a.count || order.indexOf(a.reason) - order.indexOf(b.reason));
   }
 
+  /**
+   * Compare a year's average logged day with the target.
+   * While the year is running: "ontrack" or "behind". Once it is over:
+   * "reached" or "missed". "none" when nothing is measured yet.
+   * `gap` is average minus target, in percentage points.
+   */
+  function targetProgress(average, target = YEAR_TARGET, finished = false) {
+    if (average === null || average === undefined) return { state: "none", gap: null };
+    const gap = average - target;
+    if (finished) return { state: gap >= 0 ? "reached" : "missed", gap };
+    return { state: gap >= 0 ? "ontrack" : "behind", gap };
+  }
+
   /* Weekend merge */
   const RANK = { pending: 0, skipped: 1, done: 2 };
   function mergeItems(a = [], b = [], key) {
@@ -307,6 +322,7 @@
     WEEKEND_CONCLUSION_MAX,
     REVIEW_MAX,
     SKIP_REASONS,
+    YEAR_TARGET,
     dateKey,
     parseDate,
     shiftDate,
@@ -325,6 +341,7 @@
     weekBounds,
     weekSummary,
     skipReasonCounts,
+    targetProgress,
     score,
     dayScore,
     isLogged,

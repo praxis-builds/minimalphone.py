@@ -316,3 +316,22 @@ describe("skip reasons", () => {
     assert.deepEqual(Object.values(L.SKIP_REASONS), ["Tired", "Work", "Forgot", "Didn't matter"]);
   });
 });
+
+describe("yearly target", () => {
+  test("defaults to 80%", () => {
+    assert.equal(L.YEAR_TARGET, 80);
+    assert.deepEqual(L.targetProgress(84), { state: "ontrack", gap: 4 });
+  });
+  test("during the year: on track at or above the target, behind below it", () => {
+    assert.deepEqual(L.targetProgress(80, 80), { state: "ontrack", gap: 0 });
+    assert.deepEqual(L.targetProgress(73, 80), { state: "behind", gap: -7 });
+    assert.deepEqual(L.targetProgress(73, 70), { state: "ontrack", gap: 3 });
+  });
+  test("once the year is over: reached or missed", () => {
+    assert.deepEqual(L.targetProgress(81, 80, true), { state: "reached", gap: 1 });
+    assert.deepEqual(L.targetProgress(79, 80, true), { state: "missed", gap: -1 });
+  });
+  test("nothing measured yet is neither", () => {
+    assert.deepEqual(L.targetProgress(null, 80), { state: "none", gap: null });
+  });
+});

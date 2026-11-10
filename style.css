@@ -512,3 +512,18 @@ dialog.sheet.reason-sheet .sheet-action[data-action="reason-none"]{grid-column:1
 .reason-list strong{text-align:right;font-variant-numeric:tabular-nums}
 .reason-bar{height:10px;border-radius:5px;background:var(--track);overflow:hidden}
 .reason-bar span{display:block;height:100%;background:var(--accent);border-radius:5px}
+
+/* Yearly target */
+.year-target{margin-top:.7rem;padding:.75rem .9rem;background:var(--panel);border-radius:var(--radius);display:grid;gap:.5rem}
+.target-bar{position:relative;height:10px;border-radius:5px;background:var(--track)}
+.target-fill{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:#C98D6E}
+.year-target.ontrack .target-fill,.year-target.reached .target-fill{background:var(--accent)}
+.target-mark{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1.5px;border-radius:2px;background:var(--text)}
+.target-text{margin:0;font-size:.9rem;line-height:1.45;color:var(--text-soft)}
+.target-text strong{color:var(--text)}
+.year-target.behind .target-text strong,.year-target.missed .target-text strong{color:var(--danger)}
+.year-target.ontrack .target-text strong,.year-target.reached .target-text strong{color:var(--sage)}
+.target-label{font-weight:600}
+.target-input-row{display:flex;align-items:center;gap:.5rem;margin:.4rem 0 .2rem}
+.target-input-row input{width:6.5rem;font-size:1.4rem;font-family:var(--serif);text-align:right}
+.target-input-row span{font-size:1.4rem;font-family:var(--serif)}

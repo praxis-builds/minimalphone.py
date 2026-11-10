@@ -12,7 +12,7 @@ export const ITEM_KINDS = { priorities: "priority", planned: "planned", moves: "
 const KIND_TO_LIST = { priority: "priorities", planned: "planned", move: "moves" };
 // Settings that follow the person across devices. Everything else in config
 // (focus timer, last export, migration flags…) stays on the device.
-export const SYNCED_SETTINGS = ["profile", "accent", "milestoneEnabled", "reminder", "moves", "launchers", "permanent"];
+export const SYNCED_SETTINGS = ["profile", "accent", "milestoneEnabled", "reminder", "moves", "launchers", "permanent", "yearTarget"];
 const DAY_FIELDS = ["loggedAt", "weekend", "milestoneCelebrated", "rolloverResolved", "reminderShown", "reminderDismissed"];
 export const LIMITS = { opsPerRequest: 500, valueBytes: 64 * 1024, keyLength: 200, futureSkewMs: 5 * 60 * 1000 };
 

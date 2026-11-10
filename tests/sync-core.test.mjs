@@ -89,3 +89,9 @@ test("a skip reason travels with its item and adds nothing for items without one
   assert.equal(undo.length, 1);
   assert.equal(undo[0].value.reason, undefined);
 });
+
+test("the yearly target is a synced setting", () => {
+  const records = explode({ ...sample.config, yearTarget: 75 }, []);
+  assert.equal(records.get("setting:yearTarget").value, 75);
+  assert.equal(implode(records, {}, []).config.yearTarget, 75);
+});

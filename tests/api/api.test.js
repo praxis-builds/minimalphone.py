@@ -329,4 +329,17 @@ describe("weekly review, skip reasons, yearly target", () => {
     await b.sync(); await a.sync();
     expect(a.state.days[0].priorities[0].skipReason).toBe("work");
   });
+
+  it("changing the yearly target on one phone changes it on the other", async () => {
+    const cookie = await signIn();
+    const a = phone(cookie, "a"), b = phone(cookie, "b");
+    await a.client.load(); await b.client.load();
+    a.state.config.yearTarget = 80;
+    await a.client.firstSync(a.get, a.apply);
+    await b.client.firstSync(b.get, b.apply, { fresh: true });
+    expect(b.state.config.yearTarget).toBe(80);
+    await b.edit((s) => { s.config.yearTarget = 85; s.config.updatedAt = Date.now(); });
+    await b.sync(); await a.sync();
+    expect(a.state.config.yearTarget).toBe(85);
+  });
 });

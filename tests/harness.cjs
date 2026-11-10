@@ -11,7 +11,7 @@ function boot(nowLocal, setup) {
   class MockDate extends RealDate { constructor(...a) { super(...(a.length ? a : [now])); } static now() { return now; } }
   const elements = new Map();
   const node = (tag) => {
-    const el = { tag, value: "", textContent: "", hidden: false, disabled: false, dataset: {}, children: [], attrs: {}, className: "",
+    const el = { tag, value: "", textContent: "", hidden: false, disabled: false, dataset: {}, children: [], attrs: {}, className: "", style: {},
       showModal() {}, append(...k) { el.children.push(...k); }, replaceChildren(...k) { el.children = [...k]; },
       setAttribute(n, v) { el.attrs[n] = v; }, classList: { set: new Set(), toggle(c, on) { on ? this.set.add(c) : this.set.delete(c); }, add(c) { this.set.add(c); }, remove(c) { this.set.delete(c); }, contains(c) { return this.set.has(c); } }, get childElementCount() { return el.children.length; } };
     return el;
