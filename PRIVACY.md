@@ -58,7 +58,7 @@ A manually entered location label is only a label. Minimal does not verify it or
 
 ## Network activity
 
-The browser requests the application's public HTML, CSS, JavaScript, manifest, service worker, and icon files from the site that hosts Minimal (Cloudflare Pages, or GitHub Pages for the older copy). With Sync on, the app also calls that site's `/api/` endpoints.
+The browser requests the application's public HTML, CSS, JavaScript, manifest, service worker, and icon files from the site that hosts Minimal (Cloudflare Pages). With Sync on, the app also calls that site's `/api/` endpoints.
 
 Minimal may display an online/offline hint using browser-provided connection state. This is only a local hint and does not perform location tracking.
 
@@ -98,7 +98,7 @@ JSON backups are:
 
 Store exports in a trusted location. Do not store passwords, payment-card details, bank credentials, authentication codes, private keys, recovery phrases, government identifiers, medical records, or other highly sensitive secrets in Minimal.
 
-The local development address and the GitHub Pages address are different browser origins and keep separate records.
+The local development address and the live Cloudflare address are different browser origins and keep separate records.
 
 ## Device access
 

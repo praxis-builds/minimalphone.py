@@ -79,6 +79,8 @@ If a release adds a file under `migrations/`, run `npm run db:migrate:remote` be
 
 ## Moving your data from the GitHub Pages version
 
+The GitHub Pages copy was retired on 10 Nov 2026, after the data was moved; these steps are kept for reference. An old Home Screen icon may still open its cached copy offline, but it no longer updates, so remove it.
+
 Browsers keep each website's storage separate, and on iPhone the installed Home Screen app has its own storage too. Your current data therefore stays with the GitHub Pages copy until you move it.
 
 1. In the **old** app (GitHub Pages): **Settings → Portable backup → Export Backup**. Save the JSON file to Files.

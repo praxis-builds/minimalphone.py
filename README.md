@@ -4,7 +4,7 @@ Minimal is a private, low-stimulation daily operating system for an intentional 
 
 It is an installable Progressive Web App (PWA) that keeps priorities, Small Moves, daily conclusions, history, launcher settings, and preferences on the device. Optional Sync keeps the main copy in your own Cloudflare account so a new phone can restore everything. Minimal has no analytics or advertising.
 
-**Live app:** https://praxis-builds.github.io/minimalphone.py/
+**Live app:** https://minimal-apz.pages.dev (Cloudflare Pages). The old GitHub Pages copy has been retired.
 
 ## What Minimal includes
 
@@ -75,13 +75,13 @@ Read [PRIVACY.md](PRIVACY.md) before entering personal information.
 
 ## Install on iPhone
 
-1. Open the [live Minimal site](https://praxis-builds.github.io/minimalphone.py/) in Safari.
+1. Open the [live Minimal site](https://minimal-apz.pages.dev) in Safari.
 2. Tap **Share**.
 3. Tap **Add to Home Screen**.
 4. Confirm the name and tap **Add**.
 5. Open Minimal once while connected so its application shell can be cached.
 
-Minimal can then open in a standalone app window. Core local features should remain available offline after the first successful load. External launcher destinations may still require internet access or their corresponding installed apps. A running Focus timer is reconciled from its stored timestamp when Minimal reopens, but Minimal cannot notify while it is completely closed.
+Minimal can then open in a standalone app window. Core local features should remain available offline after the first successful load. External launcher destinations may still require internet access or their corresponding installed apps. A running Focus timer is reconciled from its stored timestamp when Minimal reopens, but Minimal cannot notify about the timer while it is completely closed; the evening reminder is a separate push notification (see Settings → Check-in and milestone).
 
 ## Backup and restore
 
@@ -89,7 +89,7 @@ Use **Export data** in Settings to download a JSON backup. JSON preserves struct
 
 Backups are plain text and are **not encrypted**. Store them privately. Do not put passwords, banking credentials, authentication codes, recovery phrases, or other secrets in Minimal.
 
-The localhost development version and the GitHub Pages version use different browser origins and therefore keep separate data. Export from one and import into the other if you intentionally want to transfer records.
+The localhost development version and the live Cloudflare version use different browser origins and therefore keep separate data. Export from one and import into the other if you intentionally want to transfer records.
 
 ## Run locally
 
@@ -152,7 +152,7 @@ That runs `tests/logic.test.js` and `tests/sync-core.test.mjs` (Node), `tests/hi
 
 Contributions are welcome through pull requests. Please read [CONTRIBUTING.md](CONTRIBUTING.md).
 
-A fork or pull request does not change the live application. Changes reach the live GitHub Pages site only after a repository maintainer reviews and merges them into the publishing branch.
+A fork or pull request does not change the live application. Changes reach the live site only after a maintainer merges them into `main` and deploys with `npm run deploy`.
 
 For security concerns, follow [SECURITY.md](SECURITY.md) instead of posting exploit details or private data in a public issue.
 
