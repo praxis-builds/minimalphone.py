@@ -22,6 +22,7 @@ It is an installable Progressive Web App (PWA) that keeps priorities, Small Move
 - Add, edit, remove, and mark Small Moves on a past date without changing daily settings
 - Week, month and year statistics, streaks, strongest month, and monthly progress
 - Yearly target (Settings → Yearly target, default 80%): History shows it next to the year's average and says whether you are on track
+- Year in review: a page per year in History with the average, best month, longest streak, how it compared with the target, and that year's weekly reviews; available any time and highlighted in December
 - Up to 30 configurable launcher entries
 - Item-attached 25/50/custom focus timer with local session history
 - Optional 5-minute break timer

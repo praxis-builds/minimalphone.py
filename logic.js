@@ -211,6 +211,44 @@
     return { state: gap >= 0 ? "ontrack" : "behind", gap };
   }
 
+  /**
+   * Everything the Year in review page shows, from the days alone.
+   * The year starts at the first recorded unit if that is later than 1 January,
+   * so the weeks before Minimal was used do not count as "not logged".
+   */
+  function yearInReview(days, year, target = YEAR_TARGET, now = new Date()) {
+    const y = String(year),
+      end = `${y}-12-31`,
+      first = days.map((d) => d.date).sort()[0];
+    let start = `${y}-01-01`;
+    if (first && unitKey(first) > start) start = unitKey(first);
+    const sum = summarizeUnits(days, start, end, now),
+      months = [];
+    for (let m = 0; m < 12; m++) {
+      const ms = `${y}-${String(m + 1).padStart(2, "0")}-01`,
+        me = dateKey(new Date(Number(y), m + 1, 0));
+      if (me < start) continue;
+      const s = summarizeUnits(days, ms < start ? start : ms, me, now);
+      if (s.average !== null) months.push({ month: m, average: s.average, logged: s.logged });
+    }
+    const bestMonth = months.reduce((best, m) => (!best || m.average > best.average ? m : best), null),
+      finished = dateKey(now) > end;
+    return {
+      year: y,
+      average: sum.average,
+      units: sum.units,
+      logged: sum.logged,
+      reached: sum.reached,
+      missed: sum.missed,
+      months,
+      bestMonth,
+      longestStreak: unitStreaks(days.filter((d) => d.date.startsWith(y)), now).longest,
+      finished,
+      target,
+      progress: targetProgress(sum.average, target, finished),
+    };
+  }
+
   /* Weekend merge */
   const RANK = { pending: 0, skipped: 1, done: 2 };
   function mergeItems(a = [], b = [], key) {
@@ -342,6 +380,7 @@
     weekSummary,
     skipReasonCounts,
     targetProgress,
+    yearInReview,
     score,
     dayScore,
     isLogged,

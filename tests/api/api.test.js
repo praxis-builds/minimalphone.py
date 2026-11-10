@@ -4,6 +4,7 @@ import { SELF, env } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
 import { SyncClient } from "../../sync-client.js";
 import { explode, implode, opId, stable } from "../../sync-core.js";
+import L from "../../logic.js";
 
 const BASE = "https://minimal.test";
 const PASSCODE = "correct horse battery staple";
@@ -341,5 +342,26 @@ describe("weekly review, skip reasons, yearly target", () => {
     await b.edit((s) => { s.config.yearTarget = 85; s.config.updatedAt = Date.now(); });
     await b.sync(); await a.sync();
     expect(a.state.config.yearTarget).toBe(85);
+  });
+
+  it("a new phone builds the same Year in review from synced data", async () => {
+    const cookie = await signIn();
+    const a = phone(cookie, "a"), fresh = phone(cookie, "new");
+    await a.client.load(); await fresh.client.load();
+    a.state.days = [
+      day("2026-10-05", [["p1", "Gym", "done"], ["p2", "Read", "done"]]),
+      day("2026-11-13", [["p1", "Gym", "skipped"], ["p2", "Read", "done"]]),
+      day("2026-11-14", [["p3", "Laundry", "done"]], { weekend: true }),
+    ];
+    a.state.days[1].priorities[0].skipReason = "tired";
+    Object.assign(a.state.config, { yearTarget: 75, reviews: { "2026-11-09": { worked: "Walks", change: "Sleep" } } });
+    await a.client.firstSync(a.get, a.apply);
+    await fresh.client.firstSync(fresh.get, fresh.apply, { fresh: true });
+    const now = new Date(2026, 11, 20);
+    const review = (s) => L.yearInReview(s.days, 2026, s.config.yearTarget, now);
+    expect(review(fresh.state)).toEqual(review(a.state));
+    expect(review(fresh.state)).toMatchObject({ average: 83, longestStreak: 1, target: 75, progress: { state: "ontrack" } });
+    expect(fresh.state.config.reviews["2026-11-09"]).toEqual({ worked: "Walks", change: "Sleep" });
+    expect(L.skipReasonCounts(fresh.state.days, "p1", "2026-01-01", "2026-12-31")).toEqual([{ reason: "tired", count: 1 }]);
   });
 });

@@ -335,3 +335,36 @@ describe("yearly target", () => {
     assert.deepEqual(L.targetProgress(null, 80), { state: "none", gap: null });
   });
 });
+
+describe("year in review", () => {
+  const scored = (date, done, total = 4) => ({ date, planned: [], moves: [], focusSessions: [], conclusion: "", loggedAt: 1,
+    priorities: Array.from({ length: total }, (_, i) => ({ id: `p${i}`, text: `P${i}`, status: i < done ? "done" : "pending", order: i })) });
+  // Minimal started on Mon 5 Oct 2026. October averages 75, November 100.
+  const days = [
+    scored("2026-10-05", 4), scored("2026-10-06", 4), scored("2026-10-07", 4), scored("2026-10-08", 0), // 100,100,100,0
+    scored("2026-11-02", 4), scored("2026-11-03", 4),
+  ];
+  const r = L.yearInReview(days, 2026, 80, at(2026, 12, 15));
+  test("the year starts at the first recorded day, not 1 January", () => {
+    assert.equal(r.units, L.unitsBetween("2026-10-05", "2026-12-14").length);
+    assert.equal(r.logged, 6);
+  });
+  test("average, best month, longest streak and days at 80%+", () => {
+    assert.equal(r.average, 83); // (100*5 + 0)/6
+    assert.deepEqual(r.bestMonth, { month: 10, average: 100, logged: 2 });
+    assert.equal(r.longestStreak, 3);
+    assert.equal(r.reached, 5);
+    assert.deepEqual(r.months.map((m) => [m.month, m.average]), [[9, 75], [10, 100]]);
+  });
+  test("compares with the target: on track during the year, reached or missed after it", () => {
+    assert.deepEqual(r.progress, { state: "ontrack", gap: 3 });
+    assert.equal(L.yearInReview(days, 2026, 90, at(2027, 1, 2)).progress.state, "missed");
+    assert.equal(L.yearInReview(days, 2026, 80, at(2027, 1, 2)).finished, true);
+  });
+  test("a year with nothing logged has no average and no best month", () => {
+    const empty = L.yearInReview(days, 2025, 80, at(2026, 12, 15));
+    assert.equal(empty.average, null);
+    assert.equal(empty.bestMonth, null);
+    assert.equal(empty.longestStreak, 0);
+  });
+});

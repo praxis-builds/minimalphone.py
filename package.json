@@ -1,11 +1,11 @@
 {
   "name": "minimal",
   "private": true,
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Minimal daily operating system: PWA with Cloudflare Pages Functions + D1 sync",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node --test tests/logic.test.js tests/sync-core.test.mjs && node tests/history.cjs && node tests/rollover.cjs && node tests/service-worker.cjs && node tests/permanent.cjs && node tests/review.cjs && node tests/skip.cjs && node tests/target.cjs && vitest run",
+    "test": "node --test tests/logic.test.js tests/sync-core.test.mjs && node tests/history.cjs && node tests/rollover.cjs && node tests/service-worker.cjs && node tests/permanent.cjs && node tests/review.cjs && node tests/skip.cjs && node tests/target.cjs && node tests/year-review.cjs && vitest run",
     "test:api": "vitest run",
     "dev": "npm run build && wrangler pages dev",
     "db:migrate:local": "wrangler d1 migrations apply minimal --local",

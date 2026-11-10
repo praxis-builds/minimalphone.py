@@ -149,11 +149,14 @@ One table, `records`, holds everything that syncs. Each row is one piece of data
 
 | entity | key | value |
 | --- | --- | --- |
-| `item` | `2026-11-14\|priority\|<id>` | text, status, position (also `planned` and `move`) |
+| `item` | `2026-11-14\|priority\|<id>` | text, status, position, and the skip reason if one was chosen (also `planned` and `move`) |
 | `day` | `2026-11-14` | logged time, Weekend flag, rollover choice |
 | `note` | `2026-11-14` | the day's conclusion |
 | `focus` | `<session id>` | one completed Focus session |
-| `setting` | `profile`, `accent`, `moves`, `launchers`, `reminder`, `milestoneEnabled` | the setting |
+| `setting` | `profile`, `accent`, `moves`, `launchers`, `reminder`, `milestoneEnabled`, `permanent`, `yearTarget` | the setting |
 | `registry` | `<item id>` | item identity used by Patterns |
+| `review` | `2026-11-09` (the week's Monday) | that week's "What worked?" and "One thing to change?" |
+
+The Year in review page stores nothing of its own: it is worked out from the days, the weekly reviews and the yearly target, so every signed-in phone shows the same numbers.
 
 Other tables: `sessions` (hashed tokens only), `login_lock`, `devices`, `applied_ops`, `conflicts`, and, for the evening reminder, `push_subscriptions` and `reminder_log`. See [PRIVACY.md](../PRIVACY.md) for what this means for privacy.

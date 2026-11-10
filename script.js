@@ -12,7 +12,7 @@ function unitName(k){if(k===defaultLogUnit())return isWeekendKey(k)?"the weekend
 function unitDateText(k){return isWeekendKey(k)?`${formatDate(k)} – ${formatDate(unitEnd(k))}`:formatDate(k);}
 function conclusionMax(k){return isWeekendKey(k)?WEEKEND_CONCLUSION_MAX:500;}
 
-const VERSION="1.4.0",SCHEMA_VERSION=4,DB_NAME="minimal-daily-os",DB_VERSION=3,MAX_PRIORITIES=10,MAX_LAUNCHERS=30;
+const VERSION="1.5.0",SCHEMA_VERSION=4,DB_NAME="minimal-daily-os",DB_VERSION=3,MAX_PRIORITIES=10,MAX_LAUNCHERS=30;
 const SAFE_PROTOCOLS=new Set(["https:","http:","tel:","sms:","mailto:","facetime:","facetime-audio:","shortcuts:","maps:","music:","spotify:"]);
 const ACCENTS={mint:["#9C4C2A","156,76,42"],ice:["#41607A","65,96,122"],amber:["#7E5E14","126,94,20"],violet:["#76465F","118,70,95"],coral:["#9A3B28","154,59,40"],blue:["#566649","86,102,73"]};
 const ACCENT_LABELS={mint:"Clay",ice:"Slate",amber:"Ochre",violet:"Plum",coral:"Rust",blue:"Sage"};
@@ -41,7 +41,7 @@ function bind(){
  $("profile-form").addEventListener("submit",saveProfile);$("accent-options").addEventListener("click",e=>{const b=e.target.closest("[data-accent]");if(b){config.accent=b.dataset.accent;applyAccent();renderSettings();persistConfig();}});
  ensureBackupUi();$("export-json").addEventListener("click",()=>exportJson());$("export-readable").addEventListener("click",exportReadable);$("import-json").addEventListener("change",importJson);$("backup-merge-start").addEventListener("click",()=>showBackupConfirmation("merge"));$("backup-restore-start").addEventListener("click",()=>showBackupConfirmation("restore"));$("backup-confirm-merge").addEventListener("click",confirmBackupMerge);$("backup-confirm-restore").addEventListener("click",confirmBackupRestore);$("backup-cancel-merge").addEventListener("click",()=>hideBackupConfirmation("merge"));$("backup-cancel-restore").addEventListener("click",()=>hideBackupConfirmation("restore"));$("backup-cancel-import").addEventListener("click",cancelBackupImport);
  $("clear-data").addEventListener("click",()=>{$("clear-confirm").hidden=false;$("clear-phrase").focus();});$("cancel-clear").addEventListener("click",()=>{$("clear-confirm").hidden=true;});$("confirm-clear").addEventListener("click",clearAll);
- $("share-feedback").addEventListener("click",shareFeedback);bindSync();$("year-target-input").addEventListener("change",saveYearTarget);["review-worked","review-change"].forEach(id=>$(id).addEventListener("input",queueReview));$("history-reviews").addEventListener("click",e=>{const b=e.target.closest("[data-date]");if(b)openHistoricalDay(b.dataset.date);});$("rollover-dialog").addEventListener("close",finishRollover);["milestone-enabled","reminder-enabled","reminder-time"].forEach(id=>$(id).addEventListener("change",savePrompts));["display-name","initials","location-label"].forEach(id=>$(id).addEventListener("input",queueProfileSave));$("permanent-form").addEventListener("submit",addPermanent);$("push-on").addEventListener("click",turnOnPush);$("push-off").addEventListener("click",turnOffPush);$("push-test").addEventListener("click",testPush);["permanent-list","retired-list"].forEach(id=>$(id).addEventListener("click",e=>{const b=e.target.closest("[data-action=menu]"),li=e.target.closest("[data-id]");if(b&&li)openPermanentMenu(id,li);}));$("settings-view").addEventListener("click",e=>{const open=e.target.closest("[data-settings-page]");if(open)return showSettingsPage(open.dataset.settingsPage);if(e.target.closest("[data-settings-back]"))showSettingsPage(null);});$("dismiss-reminder").addEventListener("click",dismissReminder);$("active-focus-bar").addEventListener("click",showFocusLayer);document.querySelectorAll("[data-focus-minutes]").forEach(b=>b.addEventListener("click",()=>setFocusDuration(Number(b.dataset.focusMinutes))));$("set-custom-focus").addEventListener("click",()=>setFocusDuration(Number($("custom-focus-minutes").value)));$("focus-start").addEventListener("click",startFocusTimer);$("focus-pause").addEventListener("click",pauseFocusTimer);$("focus-reset").addEventListener("click",resetFocusTimer);$("focus-back").addEventListener("click",backToToday);$("focus-break").addEventListener("click",startFocusBreak);$("focus-mark-done").addEventListener("click",markFocusedItemDone);
+ $("share-feedback").addEventListener("click",shareFeedback);bindSync();$("open-year-review").addEventListener("click",()=>showView("yearreview"));$("yr-back").addEventListener("click",()=>showView("history"));$("yr-reviews").addEventListener("click",e=>{const b=e.target.closest("[data-date]");if(b)openHistoricalDay(b.dataset.date);});$("year-target-input").addEventListener("change",saveYearTarget);["review-worked","review-change"].forEach(id=>$(id).addEventListener("input",queueReview));$("history-reviews").addEventListener("click",e=>{const b=e.target.closest("[data-date]");if(b)openHistoricalDay(b.dataset.date);});$("rollover-dialog").addEventListener("close",finishRollover);["milestone-enabled","reminder-enabled","reminder-time"].forEach(id=>$(id).addEventListener("change",savePrompts));["display-name","initials","location-label"].forEach(id=>$(id).addEventListener("input",queueProfileSave));$("permanent-form").addEventListener("submit",addPermanent);$("push-on").addEventListener("click",turnOnPush);$("push-off").addEventListener("click",turnOffPush);$("push-test").addEventListener("click",testPush);["permanent-list","retired-list"].forEach(id=>$(id).addEventListener("click",e=>{const b=e.target.closest("[data-action=menu]"),li=e.target.closest("[data-id]");if(b&&li)openPermanentMenu(id,li);}));$("settings-view").addEventListener("click",e=>{const open=e.target.closest("[data-settings-page]");if(open)return showSettingsPage(open.dataset.settingsPage);if(e.target.closest("[data-settings-back]"))showSettingsPage(null);});$("dismiss-reminder").addEventListener("click",dismissReminder);$("active-focus-bar").addEventListener("click",showFocusLayer);document.querySelectorAll("[data-focus-minutes]").forEach(b=>b.addEventListener("click",()=>setFocusDuration(Number(b.dataset.focusMinutes))));$("set-custom-focus").addEventListener("click",()=>setFocusDuration(Number($("custom-focus-minutes").value)));$("focus-start").addEventListener("click",startFocusTimer);$("focus-pause").addEventListener("click",pauseFocusTimer);$("focus-reset").addEventListener("click",resetFocusTimer);$("focus-back").addEventListener("click",backToToday);$("focus-break").addEventListener("click",startFocusBreak);$("focus-mark-done").addEventListener("click",markFocusedItemDone);
 }
 
 function defaultConfig(){return{key:"main",version:VERSION,name:"",initials:"",locationLabel:"",accent:"mint",milestoneEnabled:true,reminder:{enabled:false,time:"18:00"},focusTimer:null,moves:[],items:[],permanent:[],reviews:{},yearTarget:MinimalLogic.YEAR_TARGET,identityMigrated:false,launchers:DEFAULT_LAUNCHERS,updatedAt:Date.now(),lastDate:null,lastExportAt:null,weekendMigratedAt:null,migrated:false};}
@@ -319,7 +319,7 @@ function isItemEligible(item,date){return Boolean(item?.activePeriods?.some(peri
 function formatActivePeriods(periods=[]){if(!periods.length)return"No active period recorded";return periods.map(period=>`${formatDate(period.start)} – ${period.end?formatDate(period.end):"present"}`).join(" · ");}
 function getDay(date){const key=unitKey(date);return days.find(d=>d.date===key);}function latestDayBefore(date){return days.filter(d=>d.date<date).sort((a,b)=>b.date.localeCompare(a.date))[0];}
 function formatDate(k){return parseDate(k).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});}function monthName(i,short=false){return new Date(2020,i,1).toLocaleDateString(undefined,{month:short?"short":"long"});}
-function showView(name){if(name==="settings")showSettingsPage(null);if(name==="today"&&activeDate!==todayKey()&&activeDate!==defaultLogUnit()&&isLogged(getDay(activeDate)))editable=false;document.querySelectorAll(".view").forEach(v=>{const active=v.id===`${name}-view`;v.hidden=!active;v.classList.toggle("active",active);});document.querySelectorAll(".bottom-nav [data-view]").forEach(b=>{const active=b.dataset.view===(name==="patterns"?"history":name);b.classList.toggle("active",active);b.setAttribute("aria-current",active?"page":"false");});if(name==="today"&&activeDate!==todayKey()&&!editable)renderToday();if(name==="history")renderHistory();if(name==="patterns")renderPatterns();location.hash=name;}
+function showView(name){if(name==="settings")showSettingsPage(null);if(name==="today"&&activeDate!==todayKey()&&activeDate!==defaultLogUnit()&&isLogged(getDay(activeDate)))editable=false;document.querySelectorAll(".view").forEach(v=>{const active=v.id===`${name}-view`;v.hidden=!active;v.classList.toggle("active",active);});document.querySelectorAll(".bottom-nav [data-view]").forEach(b=>{const active=b.dataset.view===(name==="patterns"||name==="yearreview"?"history":name);b.classList.toggle("active",active);b.setAttribute("aria-current",active?"page":"false");});if(name==="today"&&activeDate!==todayKey()&&!editable)renderToday();if(name==="history")renderHistory();if(name==="patterns")renderPatterns();if(name==="yearreview"){renderYearReview();scrollTo({top:0});}location.hash=name;}
 function tick(){const n=new Date();$("clock").textContent=n.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});if(dateKey()!==config?.lastDate)ensureToday().then(()=>{renderAll();checkReminder();});}function renderOnline(){const label=config?.locationLabel||"On-device";$("online-status").textContent=`${label} · ${navigator.onLine?"Online":"Offline"}`;}
 function download(name,content,type){const url=URL.createObjectURL(new Blob([content],{type})),a=document.createElement("a");a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);return true;}
 function showToast(message,duration=3200){clearTimeout(toastTimer);$("toast").textContent=message;$("toast").hidden=false;toastTimer=setTimeout(()=>$("toast").hidden=true,duration);}
@@ -531,6 +531,7 @@ function renderYearSummary(records,year){
   extra.push(`${loggedRecords.reduce((n,d)=>n+score(d.priorities).done,0)} priorities and ${loggedRecords.reduce((n,d)=>n+score(d.moves).done,0)} Small Moves done`);
   $("year-extra").textContent=extra.join(" · ");
   renderYearTarget($("year-target"),sum.average,year);
+  renderYearReviewLink(year);
   const bars=$("monthly-bars");bars.replaceChildren();
   months.forEach(m=>{const col=document.createElement("div"),value=document.createElement("span"),bar=document.createElement("span"),fill=document.createElement("span"),label=document.createElement("span");col.className="month-col";value.className="month-value";value.textContent=m.avg===null?"—":`${m.avg}%`;bar.className="month-bar";fill.style.height=`${m.avg||0}%`;fill.className=m.avg!==null&&best&&m.month===best.month?"best":"";bar.append(fill);label.className="month-label";label.textContent=monthName(m.month,true);col.append(value,bar,label);bars.append(col);});
   $("months-section").hidden=months.length===0;
@@ -812,4 +813,34 @@ function renderYearTarget(root,average,year){
   if(progress.state==="none")line.append(targetSentence(progress,target,year));else line.append(badge," · ",targetSentence(progress,target,year));
   root.replaceChildren(bar,line);
   return progress;
+}
+
+/* ---------- Year in review: a page per year, highlighted in December ---------- */
+function reviewYear(){return $("history-year").value||String(new Date().getFullYear());}
+function yearReviewHighlighted(year,now=new Date()){return now.getMonth()===11&&String(year)===String(now.getFullYear());}
+function renderYearReviewLink(year){
+  const link=$("open-year-review"),hot=yearReviewHighlighted(year);
+  link.classList.toggle("highlight",hot);
+  $("year-review-link-text").textContent=hot?`Your ${year} in review is ready`:`${year} in review`;
+}
+function renderYearReview(){
+  const year=reviewYear(),r=MinimalLogic.yearInReview(days,year,yearTarget());
+  $("yr-title").textContent=year;
+  $("yr-sofar").hidden=r.finished;
+  $("yr-sofar").textContent=`So far: the year runs to 31 December. ${r.logged} of ${r.units} days logged.`;
+  $("yr-average").textContent=r.average===null?"—":`${r.average}%`;
+  renderYearTarget($("yr-target"),r.average,year);
+  const tiles=[
+    [r.bestMonth?monthName(r.bestMonth.month):"—",r.bestMonth?`best month · ${r.bestMonth.average}%`:"best month"],
+    [String(r.longestStreak),`longest streak at 80%+`],
+    [String(r.logged),`of ${r.units} days logged`],
+    [String(r.reached),"days at 80% or more"],
+  ];
+  const root=$("yr-tiles");root.replaceChildren();
+  tiles.forEach(([value,label])=>{const d=document.createElement("div"),v=document.createElement("strong"),l=document.createElement("span");d.className="year-tile";v.textContent=value;l.textContent=label;d.append(v,l);root.append(d);});
+  renderReviewList($("yr-reviews"),year);
+  const n=$("yr-reviews").childElementCount;
+  $("yr-reviews-count").textContent=n?`${n} week${n===1?"":"s"}`:"";
+  $("yr-reviews-empty").hidden=n>0;
+  return r;
 }

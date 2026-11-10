@@ -527,3 +527,16 @@ dialog.sheet.reason-sheet .sheet-action[data-action="reason-none"]{grid-column:1
 .target-input-row{display:flex;align-items:center;gap:.5rem;margin:.4rem 0 .2rem}
 .target-input-row input{width:6.5rem;font-size:1.4rem;font-family:var(--serif);text-align:right}
 .target-input-row span{font-size:1.4rem;font-family:var(--serif)}
+
+/* Year in review */
+.year-review-link{width:100%;margin-top:.7rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;min-height:52px;padding:0 1rem;border:1px solid #C9B9A6;border-radius:var(--radius);background:transparent;color:var(--accent);font-weight:600;text-align:left}
+.year-review-link .chev{width:20px;height:20px;flex:none}
+.year-review-link.highlight{border-color:var(--accent);background:var(--accent);color:var(--on-accent);font-family:var(--serif);font-size:1.1rem;min-height:60px}
+.year-review-view{max-width:560px;margin:0 auto}
+.year-review-view .history-kicker{margin-top:.6rem}
+.year-review-view h1{margin:0;font-family:var(--serif);font-size:2.9rem;line-height:1.05}
+.yr-hero{margin-top:1rem;padding:1.1rem 1rem;background:var(--panel);border-radius:var(--radius);display:grid;gap:2px}
+.yr-hero strong{font-family:var(--serif);font-size:3.4rem;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.yr-hero span{font-size:.9rem;color:var(--muted)}
+.yr-tiles{margin-top:.7rem}
+.yr-tiles .year-tile strong{font-size:1.45rem}
