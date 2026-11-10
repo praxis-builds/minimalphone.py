@@ -1,4 +1,4 @@
-const CACHE_NAME = "minimal-daily-os-1.3.1-sw-1";
+const CACHE_NAME = "minimal-daily-os-1.4.0-clay-day-1";
 
 const APP_SHELL = [
     "./",
@@ -10,6 +10,8 @@ const APP_SHELL = [
     "./script.js",
     "./manifest.webmanifest",
     "./icon.svg",
+    "./fonts/fraunces-latin.woff2",
+    "./fonts/figtree-latin.woff2",
     "./apple-touch-icon.png",
     "./icon-192.png",
     "./icon-512.png"

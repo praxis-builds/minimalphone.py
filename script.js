@@ -6,7 +6,7 @@ function todayKey(){return currentUnit();}
 const WEEKEND_BACKUP_KEY="minimal.backup.pre-weekend";
 function isYesterday(k){return unitEnd(k)===shiftDate(dateKey(),-1);}
 function weekdayName(k){return parseDate(k).toLocaleDateString(undefined,{weekday:"long"});}
-function unitTitle(k){if(k===todayKey())return isWeekendKey(k)?"This weekend":"Today";if(isWeekendKey(k))return "Weekend";if(k===defaultLogUnit())return isYesterday(k)?"Yesterday":weekdayName(k);return "Daily record";}
+function unitTitle(k){if(k===todayKey())return isWeekendKey(k)?"This weekend":"Today";if(isWeekendKey(k))return "Weekend";if(k===defaultLogUnit())return isYesterday(k)?"Yesterday":weekdayName(k);return weekdayName(k);}
 function lockNote(k){return isWeekendKey(k)?"Log this on Monday, once the weekend is done.":LOG_LOCK_NOTE;}
 function unitName(k){if(k===defaultLogUnit())return isWeekendKey(k)?"the weekend":isYesterday(k)?"yesterday":weekdayName(k);return isWeekendKey(k)?`weekend of ${formatDate(k)}`:formatDate(k);}
 function unitDateText(k){return isWeekendKey(k)?`${formatDate(k)} – ${formatDate(unitEnd(k))}`:formatDate(k);}
@@ -14,7 +14,8 @@ function conclusionMax(k){return isWeekendKey(k)?WEEKEND_CONCLUSION_MAX:500;}
 
 const VERSION="1.0.0",SCHEMA_VERSION=4,DB_NAME="minimal-daily-os",DB_VERSION=3,MAX_PRIORITIES=10,MAX_LAUNCHERS=30;
 const SAFE_PROTOCOLS=new Set(["https:","http:","tel:","sms:","mailto:","facetime:","facetime-audio:","shortcuts:","maps:","music:","spotify:"]);
-const ACCENTS={mint:["#9cffc8","156,255,200"],ice:["#8fdcff","143,220,255"],amber:["#ffc56e","255,197,110"],violet:["#c9a7ff","201,167,255"],coral:["#ff9b8e","255,155,142"],blue:["#87aaff","135,170,255"]};
+const ACCENTS={mint:["#9C4C2A","156,76,42"],ice:["#41607A","65,96,122"],amber:["#7E5E14","126,94,20"],violet:["#76465F","118,70,95"],coral:["#9A3B28","154,59,40"],blue:["#566649","86,102,73"]};
+const ACCENT_LABELS={mint:"Clay",ice:"Slate",amber:"Ochre",violet:"Plum",coral:"Rust",blue:"Sage"};
 const DEFAULT_LAUNCHERS=[
  {id:"calls",name:"Calls",url:"tel:",symbol:"C",color:"#9cffc8",pinned:true,order:0},
  {id:"messages",name:"Messages",url:"sms:",symbol:"M",color:"#8fdcff",pinned:true,order:1},
@@ -35,7 +36,7 @@ function bind(){
  $("item-form").addEventListener("submit",saveDialogItem);$("item-dialog").addEventListener("close",()=>{$("dialog-error").textContent="";});
  $("conclusion").addEventListener("input",queueConclusion);$("edit-day-button").addEventListener("click",async()=>{if(activeDate>dateKey())return;const day=currentDay();if(!getDay(activeDate)){day.rolloverResolved="archive";await persistDay(day);}editable=true;renderToday();});
  $("history-year").addEventListener("change",renderHistory);$("history-list").addEventListener("click",e=>{const b=e.target.closest("[data-date]");if(b)openHistoricalDay(b.dataset.date);});
- $("history-date-form").addEventListener("submit",e=>{e.preventDefault();openHistoricalDay($("history-date").value);});$("past-move-form").addEventListener("submit",addPastMove);$("return-today").addEventListener("click",backToToday);$("log-switch").addEventListener("click",()=>{activeDate=activeDate===todayKey()?defaultLogUnit():todayKey();editable=true;renderToday();scrollTo({top:0,behavior:"smooth"});});
+ $("history-date-form").addEventListener("submit",e=>{e.preventDefault();openHistoricalDay($("history-date").value);});$("past-move-form").addEventListener("submit",addPastMove);$("return-today").addEventListener("click",backToToday);$("mode-log").addEventListener("click",()=>{activeDate=defaultLogUnit();editable=true;renderToday();scrollTo({top:0,behavior:"smooth"});});$("mode-plan").addEventListener("click",()=>{activeDate=todayKey();editable=true;renderToday();scrollTo({top:0,behavior:"smooth"});});$("item-menu-actions").addEventListener("click",runItemMenuAction);
  $("open-patterns").addEventListener("click",()=>showView("patterns"));$("patterns-back").addEventListener("click",()=>showView("history"));$("pattern-search").addEventListener("input",renderPatterns);$("pattern-item").addEventListener("change",()=>{patternSelectedId=$("pattern-item").value;renderPatterns();});$("pattern-ranges").addEventListener("click",e=>{const b=e.target.closest("[data-range]");if(!b)return;patternRange=b.dataset.range;$("pattern-custom").hidden=patternRange!=="custom";renderPatterns();});$("apply-pattern-range").addEventListener("click",renderPatterns);$("pattern-timeline").addEventListener("click",e=>{const b=e.target.closest("[data-pattern-date]");if(b)openPatternDay(b.dataset.patternDate);});
  $("profile-form").addEventListener("submit",saveProfile);$("accent-options").addEventListener("click",e=>{const b=e.target.closest("[data-accent]");if(b){config.accent=b.dataset.accent;applyAccent();renderSettings();}});
  ensureBackupUi();$("export-json").addEventListener("click",()=>exportJson());$("export-readable").addEventListener("click",exportReadable);$("import-json").addEventListener("change",importJson);$("backup-merge-start").addEventListener("click",()=>showBackupConfirmation("merge"));$("backup-restore-start").addEventListener("click",()=>showBackupConfirmation("restore"));$("backup-confirm-merge").addEventListener("click",confirmBackupMerge);$("backup-confirm-restore").addEventListener("click",confirmBackupRestore);$("backup-cancel-merge").addEventListener("click",()=>hideBackupConfirmation("merge"));$("backup-cancel-restore").addEventListener("click",()=>hideBackupConfirmation("restore"));$("backup-cancel-import").addEventListener("click",cancelBackupImport);
@@ -67,17 +68,140 @@ async function finishRollover(){const choice=$("rollover-dialog").returnValue;if
 function renderAll(){renderOnline();renderToday();renderLauncher();renderHistoryYears();renderHistory();renderSettings();renderBackupStatus();renderPatterns();renderFocusTimer();$("move-form").querySelector("button").disabled=false;}
 let historicalDraft=null;
 function currentDay(){if(getDay(activeDate))return getDay(activeDate);if(!historicalDraft||historicalDraft.date!==activeDate)historicalDraft=blankDay(activeDate);return historicalDraft;}
-function renderToday(){const day=currentDay(),isToday=activeDate===todayKey(),visibleMoves=day.moves.filter(m=>m.enabled!==false);editable=isToday?true:editable;const loggable=canLogUnit(activeDate),title=unitTitle(activeDate);$("today-title").textContent=isToday&&config.name?`Today, ${config.name}`:title;$("log-lock").hidden=loggable;$("log-lock").textContent=lockNote(activeDate);$("log-switch").textContent=isToday?`Log ${unitName(defaultLogUnit())}`:"Plan today";const dt=parseDate(activeDate);$("today-weekday").textContent=isWeekendKey(activeDate)?"WEEKEND · SATURDAY + SUNDAY":dt.toLocaleDateString(undefined,{weekday:"long"}).toUpperCase();$("today-date").textContent=isWeekendKey(activeDate)?unitDateText(activeDate):dt.toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"});$("conclusion").maxLength=conclusionMax(activeDate);$("readonly-banner").hidden=isToday||activeDate===defaultLogUnit();$("readonly-banner").textContent=editable?"Editing "+(isWeekendKey(activeDate)?`the Weekend of ${unitDateText(activeDate)}`:formatDate(activeDate))+" · Changes save automatically.":"This historical day is read-only. Choose Edit this day to fill in missed items.";$("return-today").hidden=isToday||activeDate===defaultLogUnit();$("log-switch").hidden=!(isToday||activeDate===defaultLogUnit());$("past-move-form").hidden=isToday||!editable;$("edit-day-button").hidden=isToday||editable;renderItems($("priority-list"),day.priorities,"priority",editable);$("priority-empty").hidden=day.priorities.length>0;$("priority-count").textContent=`${day.priorities.length} / 10`;renderItems($("moves-list"),visibleMoves,"move",editable);$("moves-empty").hidden=visibleMoves.length>0||!isToday;$("moves-count").textContent=`${visibleMoves.length} ENABLED`;renderItems($("tomorrow-list"),day.planned,"tomorrow",editable);$("tomorrow-empty").hidden=day.planned.length>0;$("tomorrow-count").textContent=`${day.planned.length} / 10`;$("conclusion").value=day.conclusion;$("conclusion").disabled=!editable||!loggable;$("conclusion").placeholder=loggable?"Keep it short.":lockNote(activeDate);$("priority-form").hidden=!editable;$("tomorrow-form").hidden=!editable;renderScores(day);}
-function renderItems(root,items,type,canEdit){root.replaceChildren();[...items].sort((a,b)=>a.order-b.order).forEach((item,index)=>{const status=validStatus(item.status),name=item.text||item.label,li=document.createElement("li");li.className=`item ${status}`;li.dataset.id=item.id;li.dataset.type=type;if(type!=="tomorrow"){const controls=document.createElement("span");controls.className="status-controls";const done=actionButton("✓","status-done",status==="done"?`Return ${name} to pending`:`Mark ${name} complete`),skipped=actionButton("×","status-skipped",status==="skipped"?`Return ${name} to pending`:`Mark ${name} skipped`);done.className="status-button done-control";skipped.className="status-button skip-control";done.disabled=skipped.disabled=!canEdit||!canLogUnit(activeDate);if(!canLogUnit(activeDate))done.title=skipped.title=lockNote(activeDate);done.setAttribute("aria-pressed",String(status==="done"));skipped.setAttribute("aria-pressed",String(status==="skipped"));controls.append(done,skipped);li.append(controls);}else li.append(document.createElement("span"));const content=document.createElement("span"),label=document.createElement("span");content.className="item-content";label.className="item-text";label.textContent=name;content.append(label);const summary=focusSummary(currentDay(),type,item.id);if(summary){const meta=document.createElement("small");meta.className="focus-summary";meta.textContent=summary;content.append(meta);}li.append(content);if(canEdit){const actions=document.createElement("span");actions.className="item-actions";if(index>0)actions.append(actionButton("↑","up","Move up"));if(index<items.length-1)actions.append(actionButton("↓","down","Move down"));if(activeDate===todayKey()&&(type==="priority"||type==="move"))actions.append(actionButton("Focus","focus",`Focus on ${name}`));if(type!=="move"||activeDate<todayKey())actions.append(actionButton("Edit","edit","Edit"),actionButton("Delete","delete","Delete"));li.append(actions);}root.append(li);});}
+/* ---------- Day screen (Clay): one screen with a Log | Plan switch ---------- */
+function modeName(k){
+  if(isWeekendKey(k))return "Weekend";
+  return isYesterday(k)?"Yesterday":weekdayName(k);
+}
+function dayDateLine(k,loggable){
+  const d=parseDate(k),thisYear=d.getFullYear()===new Date().getFullYear();
+  const part=x=>`${x.toLocaleDateString(undefined,{weekday:"long"})} ${x.getDate()}`;
+  const month=x=>x.toLocaleDateString(undefined,{month:"long"})+(thisYear?"":` ${x.getFullYear()}`);
+  let text;
+  if(isWeekendKey(k)){const end=parseDate(unitEnd(k));text=end.getMonth()===d.getMonth()?`${part(d)} – ${part(end)} ${month(end)}`:`${part(d)} ${month(d)} – ${part(end)} ${month(end)}`;}
+  else text=`${part(d)} ${month(d)}`;
+  if(!loggable)text+=isWeekendKey(k)?" · logging opens on Monday":" · logging opens tomorrow";
+  return text;
+}
+function renderToday(){
+  const day=currentDay(),isToday=activeDate===todayKey(),def=defaultLogUnit(),visibleMoves=day.moves.filter(m=>m.enabled!==false);
+  editable=isToday?true:editable;
+  const loggable=canLogUnit(activeDate),logMode=activeDate===def,view=$("today-view");
+  view.classList.toggle("plan-mode",isToday);
+  $("mode-log").textContent=`Log · ${modeName(def)}`;
+  $("mode-log").setAttribute("aria-pressed",String(logMode));
+  $("mode-plan").setAttribute("aria-pressed",String(isToday));
+  $("today-title").textContent=isToday&&config.name?`Today, ${config.name}`:unitTitle(activeDate);
+  $("today-date").textContent=dayDateLine(activeDate,loggable);
+  $("log-lock").hidden=true;
+  $("readonly-banner").hidden=isToday||logMode;
+  $("readonly-banner").textContent=editable?"Editing this day. Changes save automatically.":"This day is read-only. Choose Edit this day to fill it in.";
+  $("return-today").hidden=isToday||logMode;
+  $("edit-day-button").hidden=isToday||editable;
+  $("conclusion").maxLength=conclusionMax(activeDate);
+
+  renderItems($("priority-list"),day.priorities,"priority",editable);
+  $("priority-empty").hidden=day.priorities.length>0||editable;
+  $("priority-count").textContent=`${day.priorities.length} of ${MAX_PRIORITIES}`;
+  $("priority-form").hidden=!editable;
+
+  // Plan mode lists Small Moves as one line; they are ticked when the day is logged.
+  const sentence=isToday&&visibleMoves.length>0;
+  $("moves-sentence").hidden=!sentence;
+  $("moves-sentence").textContent=visibleMoves.map(m=>m.label).join(" · ");
+  $("moves-card").hidden=sentence;
+  renderItems($("moves-list"),sentence?[]:visibleMoves,"move",editable);
+  $("moves-empty").hidden=visibleMoves.length>0||!isToday;
+  $("moves-count").textContent=isToday?(visibleMoves.length?(isWeekendKey(activeDate)?"Tick them on Monday":"Tick them tomorrow"):""):`${visibleMoves.filter(m=>validStatus(m.status)==="done").length} of ${visibleMoves.length} done`;
+  $("past-move-form").hidden=isToday||logMode||!editable;
+
+  $("note-section").hidden=!loggable;
+  $("conclusion").value=day.conclusion;
+  $("conclusion").disabled=!editable||!loggable;
+
+  $("tomorrow-section").hidden=!isToday;
+  renderItems($("tomorrow-list"),day.planned,"tomorrow",editable);
+  $("tomorrow-empty").hidden=day.planned.length>0||editable;
+  $("tomorrow-count").textContent=`${day.planned.length} of ${MAX_PRIORITIES}`;
+  $("tomorrow-form").hidden=!editable;
+  renderScores(day);
+}
+function renderDayItems(root,items,type,canEdit){
+  root.replaceChildren();
+  const loggable=canLogUnit(activeDate),isToday=activeDate===todayKey();
+  [...items].sort((a,b)=>a.order-b.order).forEach((item,index)=>{
+    const status=validStatus(item.status),name=item.text||item.label,li=document.createElement("li");
+    li.className=`item ${status}`;li.dataset.id=item.id;li.dataset.type=type;
+    let lead;
+    if(type!=="tomorrow"&&loggable){
+      lead=document.createElement("button");lead.type="button";lead.className="check";lead.dataset.action="status-done";lead.disabled=!canEdit;
+      lead.setAttribute("aria-pressed",String(status==="done"));
+      lead.setAttribute("aria-label",status==="done"?`${name}: done. Mark as not done`:status==="skipped"?`${name}: skipped. Mark as done`:`${name}: not done. Mark as done`);
+      const mark=document.createElement("span");mark.className="check-mark";mark.setAttribute("aria-hidden","true");lead.append(mark);
+    }else{
+      lead=document.createElement("span");lead.className="item-lead";lead.setAttribute("aria-hidden","true");lead.textContent=type==="tomorrow"?"→":String(index+1);
+    }
+    const content=document.createElement("span"),label=document.createElement("span");
+    content.className="item-content";label.className="item-text";label.textContent=name;content.append(label);
+    const notes=[];
+    if(status==="skipped"&&loggable)notes.push("Skipped");
+    const summary=focusSummary(currentDay(),type,item.id);if(summary)notes.push(summary);
+    if(notes.length){const meta=document.createElement("small");meta.className="item-meta";meta.textContent=notes.join(" · ");content.append(meta);}
+    li.append(lead,content);
+    if(canEdit&&isToday&&type==="priority"){const focus=document.createElement("button");focus.type="button";focus.className="focus-pill";focus.dataset.action="focus";focus.textContent="Focus";focus.setAttribute("aria-label",`Focus on ${name}`);li.append(focus);}
+    if(canEdit){const more=document.createElement("button");more.type="button";more.className="menu-button";more.dataset.action="menu";more.textContent="⋯";more.setAttribute("aria-label",`More for ${name}`);li.append(more);}
+    root.append(li);
+  });
+}
+function renderScoreLine(day){
+  const line=$("score-line");
+  if(!canLogUnit(day.date)){line.hidden=true;return;}
+  line.hidden=false;
+  const enabledMoves=day.moves.filter(m=>m.enabled!==false),p=score(day.priorities),m=score(enabledMoves),all=score([...day.priorities,...enabledMoves]),previous=scoreBaselines.get(day.date);
+  $("overall-score").textContent=all.percent===null?"—":`${all.percent}%`;
+  $("priority-score").textContent=`Priorities ${p.done}/${p.total}`;
+  $("moves-score").textContent=`Moves ${m.done}/${m.total}`;
+  $("target-status").textContent=all.percent===null?"Not measured":all.percent>=80?"Target reached":"Below the 80% target";
+  $("score-fill").style.width=`${all.percent||0}%`;
+  line.classList.toggle("reached",all.percent!==null&&all.percent>=80);
+  scoreBaselines.set(day.date,all.percent??0);
+  if(previous!==undefined&&previous<80&&all.percent!==null&&all.percent>=80&&config.milestoneEnabled&&!day.milestoneCelebrated){day.milestoneCelebrated=true;persistDay(day);showToast("80% secured — the essential work is done.",5000);}
+}
+let itemMenuContext=null;
+function openItemMenu(listId,li){
+  const type=li.dataset.type,day=currentDay(),list=type==="priority"?day.priorities:type==="tomorrow"?day.planned:day.moves;
+  const sorted=[...list].sort((a,b)=>a.order-b.order),index=sorted.findIndex(i=>i.id===li.dataset.id);
+  if(index<0)return;
+  const item=sorted[index],actions=[];
+  if(activeDate===todayKey()&&(type==="priority"||type==="move"))actions.push(["focus","Focus"]);
+  if(type!=="tomorrow"&&canLogUnit(activeDate))actions.push(["status-skipped",validStatus(item.status)==="skipped"?"Undo skip":"Skip"]);
+  if(index>0)actions.push(["up","Move up"]);
+  if(index<sorted.length-1)actions.push(["down","Move down"]);
+  if(type!=="move"||activeDate<todayKey())actions.push(["edit","Edit"],["delete","Delete"]);
+  itemMenuContext={listId,id:item.id};
+  $("item-menu-title").textContent=item.text||item.label;
+  $("item-menu-actions").replaceChildren(...actions.map(([action,label])=>{const b=document.createElement("button");b.type="button";b.dataset.action=action;b.textContent=label;b.className=action==="delete"?"sheet-action danger":"sheet-action";return b;}));
+  $("item-menu").showModal();
+}
+async function runItemMenuAction(e){
+  const button=e.target.closest("[data-action]");
+  if(!button||!itemMenuContext)return;
+  const{listId,id}=itemMenuContext;itemMenuContext=null;
+  $("item-menu").close();
+  const li=[...$(listId).querySelectorAll("[data-id]")].find(x=>x.dataset.id===id);
+  if(li)await runItemAction(listId,li,button.dataset.action);
+}
+function renderItems(root,items,type,canEdit){renderDayItems(root,items,type,canEdit);}
 function actionButton(label,action,aria){const b=document.createElement("button");b.type="button";b.className="icon-action";b.dataset.action=action;b.textContent=label;b.setAttribute("aria-label",aria);return b;}
-async function itemAction(e){const button=e.target.closest("[data-action]"),li=e.target.closest("[data-id]");if(!button||!li||(!editable&&e.currentTarget.id!=="move-settings"))return;const day=currentDay(),type=li.dataset.type,isMoveSettings=e.currentTarget.id==="move-settings",list=type==="priority"?day.priorities:type==="tomorrow"?day.planned:isMoveSettings?config.moves:day.moves;const index=list.findIndex(i=>i.id===li.dataset.id);if(index<0)return;const action=button.dataset.action,item=list[index];if(action==="focus")return openFocus(day.date,type,item);if(action==="rename-move")return openItemDialog("moveconfig",item);if((action==="status-done"||action==="status-skipped")&&!canLogUnit(day.date))return showToast(lockNote(day.date));if(isMoveSettings&&action==="toggle-enabled"){item.enabled=item.enabled===false;setItemEnabled(item.id,item.enabled);}
+async function itemAction(e){const button=e.target.closest("[data-action]"),li=e.target.closest("[data-id]");if(!button||!li)return;if(button.dataset.action==="menu")return openItemMenu(e.currentTarget.id,li);return runItemAction(e.currentTarget.id,li,button.dataset.action);}
+async function runItemAction(listId,li,actionName){if(!editable&&listId!=="move-settings")return;const day=currentDay(),type=li.dataset.type,isMoveSettings=listId==="move-settings",list=type==="priority"?day.priorities:type==="tomorrow"?day.planned:isMoveSettings?config.moves:day.moves;const index=list.findIndex(i=>i.id===li.dataset.id);if(index<0)return;const action=actionName,item=list[index];if(action==="focus")return openFocus(day.date,type,item);if(action==="rename-move")return openItemDialog("moveconfig",item);if((action==="status-done"||action==="status-skipped")&&!canLogUnit(day.date))return showToast(lockNote(day.date));if(isMoveSettings&&action==="toggle-enabled"){item.enabled=item.enabled===false;setItemEnabled(item.id,item.enabled);}
  else if(action==="status-done"){item.status=item.status==="done"?"pending":"done";day.loggedAt=day.loggedAt||Date.now();}else if(action==="status-skipped"){item.status=item.status==="skipped"?"pending":"skipped";day.loggedAt=day.loggedAt||Date.now();}else if(action==="delete"){if(isMoveSettings){const registry=getRegistryItem(item.id);if(registry){registry.deleted=true;closeActivePeriod(registry,shiftDate(dateKey(),-1));}const snapshot=getDay(todayKey())?.moves.find(m=>m.id===item.id);if(snapshot)snapshot.enabled=false;}else if(type==="priority"&&day.date===todayKey()){const registry=getRegistryItem(item.id);if(registry)registry.deleted=true;}list.splice(index,1);}else if(action==="up"&&index>0)[list[index-1],list[index]]=[list[index],list[index-1]];else if(action==="down"&&index<list.length-1)[list[index+1],list[index]]=[list[index],list[index+1]];else if(action==="edit")return openItemDialog(type,item);list.forEach((v,i)=>v.order=i);if(isMoveSettings){await syncCurrentDayMoves();await persistConfig();}else{await persistDay(day);if(action==="delete")await persistConfig();}renderAll();await checkReminder();}
 
 async function syncCurrentDayMoves(){const day=getDay(todayKey());if(!day)return;config.moves.forEach((move,index)=>{let snapshot=day.moves.find(m=>m.id===move.id);if(!snapshot){snapshot={id:move.id,label:move.label,status:"pending",enabled:move.enabled!==false,order:index};day.moves.push(snapshot);}snapshot.label=move.label;snapshot.enabled=move.enabled!==false;snapshot.order=index;});await persistDay(day);}
 
 async function addMove(e){e.preventDefault();const input=$("move-input"),label=text(input.value,80),message=$("move-form-message");message.textContent="";if(!label)return;if(config.moves.length>=10){message.textContent="You can configure up to 10 Small Moves. Delete one before adding another.";return;}if(config.moves.some(m=>m.label.toLowerCase()===label.toLowerCase())){message.textContent="That Small Move already exists.";return;}const id=uid("move");config.moves.push({id,label,enabled:true,order:config.moves.length});config.items.push({id,type:"move",name:label,createdDate:dateKey(),activePeriods:[{start:dateKey(),end:null}],deleted:false});input.value="";await syncCurrentDayMoves();await persistConfig();renderAll();message.textContent="Small Move added.";}
 async function addPriority(e,tomorrow){e.preventDefault();if(!editable)return;const input=$(tomorrow?"tomorrow-input":"priority-input"),value=text(input.value,140),day=currentDay(),list=tomorrow?day.planned:day.priorities;if(!value)return;if(list.length>=MAX_PRIORITIES)return showToast("The daily limit is 10 priorities.");if(list.some(p=>p.text.toLowerCase()===value.toLowerCase()))return showToast("That priority is already listed.");let registry=config.items.find(i=>i.type==="priority"&&normalizeItemName(i.name)===normalizeItemName(value));if(!registry){registry={id:uid("priority"),type:"priority",name:value,createdDate:tomorrow?shiftDate(day.date,1):day.date,activePeriods:[],deleted:false};config.items.push(registry);}list.push({id:registry.id,text:value,status:"pending",order:list.length});if(!tomorrow)markItemEligible(registry.id,day.date);input.value="";await Promise.all([persistDay(day),persistConfig()]);renderToday();}
-function renderScores(day){if(!canLogUnit(day.date)){["priority-score","moves-score","overall-score"].forEach(id=>{$(id).textContent="Not counted";});$("target-status").textContent=isWeekendKey(day.date)?"Log on Monday":"Log tomorrow";document.querySelector(".target-card").classList.remove("reached");return;}const enabledMoves=day.moves.filter(m=>m.enabled!==false),p=score(day.priorities),m=score(enabledMoves),all=score([...day.priorities,...enabledMoves]),previous=scoreBaselines.get(day.date);setScore("priority-score",p);setScore("moves-score",m);setScore("overall-score",all);$("target-status").textContent=all.percent===null?"Not measured":all.percent>=80?"Target reached":"Continue tomorrow";document.querySelector(".target-card").classList.toggle("reached",all.percent!==null&&all.percent>=80);scoreBaselines.set(day.date,all.percent??0);if(previous!==undefined&&previous<80&&all.percent!==null&&all.percent>=80&&config.milestoneEnabled&&!day.milestoneCelebrated){day.milestoneCelebrated=true;persistDay(day);showToast("80% secured — the essential work is done.",5000);}}
+function renderScores(day){renderScoreLine(day);}
 function score(items){const tracked=items.filter(i=>i.enabled!==false),total=tracked.length,done=tracked.filter(i=>validStatus(i.status)==="done").length;return{done,total,percent:total?Math.round(done/total*100):null};}function setScore(id,s){$(id).textContent=s.percent===null?"Not measured":`${s.percent}%`;}
 function queueConclusion(){if(!editable||!canLogUnit(activeDate))return;const day=currentDay(),value=text($("conclusion").value,conclusionMax(day.date),true);day.conclusion=value;if(value)day.loggedAt=day.loggedAt||Date.now();$("conclusion-status").textContent="Saving…";conclusionTimer=setTimeout(async()=>{await persistDay(day);if(activeDate===day.date)$("conclusion-status").textContent="Saved locally";renderHistory();},550);}
 
@@ -86,7 +210,7 @@ async function launcherAction(e){const target=e.target.closest("[data-action]");
 function openItemDialog(mode,item){dialogMode=mode;$("item-id").value=item?.id||"";$("item-text").value=item?.text||item?.label||item?.name||"";$("launcher-fields").hidden=mode!=="launcher";$("item-dialog-title").textContent=mode==="moveconfig"?"Rename Small Move":item?`Edit ${mode}`:`Add ${mode}`;$("item-label").firstChild.textContent=mode==="launcher"?"Name":mode==="moveconfig"?"Label":"Text";if(mode==="launcher"){$("launcher-url").value=item?.url||"";$("launcher-symbol").value=item?.symbol||"";$("launcher-color").value=validColor(item?.color)?item.color:"#9cffc8";$("launcher-pinned").checked=Boolean(item?.pinned);}$("item-dialog").showModal();$("item-text").focus();}
 async function saveDialogItem(e){e.preventDefault();const value=text($("item-text").value,dialogMode==="launcher"?40:140),id=$("item-id").value;if(!value)return;if(dialogMode==="launcher"){const url=normalizeUrl($("launcher-url").value);if(!url){$("dialog-error").textContent="Use HTTPS, HTTP on localhost, or a supported iPhone deep link. JavaScript and data URLs are blocked.";return;}if(!id&&config.launchers.length>=30)return showToast("Launcher limit reached (30).");const app=id?config.launchers.find(a=>a.id===id):null,data={id:app?.id||uid("app"),name:value,url,symbol:text($("launcher-symbol").value,3)||value[0].toUpperCase(),color:$("launcher-color").value,pinned:$("launcher-pinned").checked,order:app?.order??config.launchers.length};if(app)Object.assign(app,data);else config.launchers.push(data);await persistConfig();renderLauncher();}else if(dialogMode==="moveconfig"){const move=config.moves.find(m=>m.id===id),registry=getRegistryItem(id);if(move)move.label=text(value,80);if(registry)registry.name=move.label;const today=getDay(todayKey()),snapshot=today?.moves.find(m=>m.id===id);if(snapshot){snapshot.label=move.label;await persistDay(today);}await persistConfig();renderAll();}else{const day=currentDay(),list=dialogMode==="priority"?day.priorities:dialogMode==="move"?day.moves:day.planned,item=list.find(i=>i.id===id),registry=dialogMode==="move"?null:getRegistryItem(id);if(!editable)return;if(item){if(dialogMode==="move")item.label=text(value,80);else item.text=value;}if(registry&&day.date===todayKey())registry.name=value;await Promise.all([persistDay(day),persistConfig()]);renderToday();}$("item-dialog").close();}
 
-function renderSettings(){$("display-name").value=config.name;$("initials").value=config.initials;$("location-label").value=config.locationLabel;$("milestone-enabled").checked=config.milestoneEnabled;$("reminder-enabled").checked=config.reminder.enabled;$("reminder-time").value=config.reminder.time;const accents=$("accent-options");accents.replaceChildren();Object.entries(ACCENTS).forEach(([name,[color]])=>{const b=document.createElement("button");b.type="button";b.className=`accent-choice${config.accent===name?" selected":""}`;b.dataset.accent=name;b.style.setProperty("--swatch",color);b.setAttribute("aria-label",`${name} accent`);b.setAttribute("aria-pressed",String(config.accent===name));accents.append(b);});const root=$("move-settings");root.replaceChildren();config.moves.forEach((m,i)=>{const li=document.createElement("li");li.className=`item configured-move${m.enabled===false?" disabled":""}`;li.dataset.id=m.id;li.dataset.type="move";const state=document.createElement("span");state.className="move-state";state.textContent=m.enabled===false?"OFF":"ON";const label=document.createElement("span");label.className="item-text";label.textContent=m.label;const actions=document.createElement("span");actions.className="item-actions";if(i)actions.append(actionButton("↑","up","Move up"));if(i<config.moves.length-1)actions.append(actionButton("↓","down","Move down"));actions.append(actionButton("Rename","rename-move","Rename"),actionButton(m.enabled===false?"Enable":"Disable","toggle-enabled",m.enabled===false?"Enable":"Disable"),actionButton("Delete","delete","Delete"));li.append(state,label,actions);root.append(li);});$("move-config-count").textContent=`${config.moves.length} / 10`;$("move-settings-empty").hidden=config.moves.length>0;}
+function renderSettings(){$("display-name").value=config.name;$("initials").value=config.initials;$("location-label").value=config.locationLabel;$("milestone-enabled").checked=config.milestoneEnabled;$("reminder-enabled").checked=config.reminder.enabled;$("reminder-time").value=config.reminder.time;const accents=$("accent-options");accents.replaceChildren();Object.entries(ACCENTS).forEach(([name,[color]])=>{const b=document.createElement("button");b.type="button";b.className=`accent-choice${config.accent===name?" selected":""}`;b.dataset.accent=name;b.style.setProperty("--swatch",color);b.setAttribute("aria-label",`${ACCENT_LABELS[name]||name} accent`);b.setAttribute("aria-pressed",String(config.accent===name));accents.append(b);});const root=$("move-settings");root.replaceChildren();config.moves.forEach((m,i)=>{const li=document.createElement("li");li.className=`item configured-move${m.enabled===false?" disabled":""}`;li.dataset.id=m.id;li.dataset.type="move";const state=document.createElement("span");state.className="move-state";state.textContent=m.enabled===false?"OFF":"ON";const label=document.createElement("span");label.className="item-text";label.textContent=m.label;const actions=document.createElement("span");actions.className="item-actions";if(i)actions.append(actionButton("↑","up","Move up"));if(i<config.moves.length-1)actions.append(actionButton("↓","down","Move down"));actions.append(actionButton("Rename","rename-move","Rename"),actionButton(m.enabled===false?"Enable":"Disable","toggle-enabled",m.enabled===false?"Enable":"Disable"),actionButton("Delete","delete","Delete"));li.append(state,label,actions);root.append(li);});$("move-config-count").textContent=`${config.moves.length} / 10`;$("move-settings-empty").hidden=config.moves.length>0;}
 async function saveProfile(e){e.preventDefault();config.name=text($("display-name").value,40);config.initials=text($("initials").value,3).toUpperCase();config.locationLabel=text($("location-label").value,40);await persistConfig();renderAll();showToast("Profile saved.");}
 
 async function savePrompts(){const previous=`${config.reminder.enabled}:${config.reminder.time}`,time=/^([01]\d|2[0-3]):[0-5]\d$/.test($("reminder-time").value)?$("reminder-time").value:"18:00";config.milestoneEnabled=$("milestone-enabled").checked;config.reminder={enabled:$("reminder-enabled").checked,time};if(previous!==`${config.reminder.enabled}:${time}`){const day=getDay(todayKey());if(day){day.reminderShown=false;day.reminderDismissed=false;await persistDay(day);}}await persistConfig();renderSettings();showToast("Daily prompts saved.");await checkReminder();}

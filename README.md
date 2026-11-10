@@ -130,6 +130,7 @@ That runs `tests/logic.test.js` and `tests/sync-core.test.mjs` (Node), `tests/hi
 - `scripts/build.mjs` — builds `dist/` for Cloudflare Pages
 - `docs/SYNC.md` — Cloudflare setup, deploy and restore
 - `tests/` — unit and regression tests (see [Tests](#tests))
+- `fonts/` — Fraunces and Figtree (Latin subsets), self-hosted under the SIL Open Font License (`OFL-*.txt`)
 - `manifest.webmanifest` — PWA metadata
 - `service-worker.js` — offline application shell
 - `icon.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` — app icons
