@@ -81,6 +81,7 @@ export function explode(config, days, { stampZero = false } = {}) {
         const value = { status: item.status, position };
         if (kind === "move") Object.assign(value, { label: item.label, enabled: item.enabled !== false });
         else value.text = item.text;
+        if (item.status === "skipped" && item.skipReason) value.reason = item.skipReason;
         put("item", `${day.date}|${kind}|${item.id}`, value, at);
       });
     }
@@ -129,6 +130,7 @@ export function implode(records, baseConfig = {}, baseDays = []) {
       const item = kind === "move"
         ? { id, label: v.label, status: v.status, enabled: v.enabled !== false, order: v.position }
         : { id, text: v.text, status: v.status, order: v.position };
+      if (v.reason) item.skipReason = v.reason;
       dayOf(date)[list].push(item);
     }
   }

@@ -500,3 +500,15 @@ input[type="checkbox"],input[type="radio"]{accent-color:var(--accent)}
 .review-entry-head span{font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .review-entry-line{font-size:.9rem;line-height:1.45;color:var(--text-soft);overflow-wrap:anywhere}
 .review-entry-line em{font-style:normal;font-weight:600;color:var(--text)}
+
+/* Skip reasons */
+dialog.sheet.reason-sheet .sheet-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+dialog.sheet.reason-sheet .sheet-action{text-align:center}
+dialog.sheet.reason-sheet .sheet-action[data-action="reason-none"]{grid-column:1/-1;color:var(--muted)}
+.pattern-reasons{margin-top:1rem}
+.pattern-reasons h3{margin:0 0 .4rem;font-size:.95rem}
+.reason-list{list-style:none;margin:0;padding:0;display:grid;gap:.45rem}
+.reason-list li{display:grid;grid-template-columns:7.5rem minmax(0,1fr) 2rem;align-items:center;gap:.6rem;font-size:.9rem}
+.reason-list strong{text-align:right;font-variant-numeric:tabular-nums}
+.reason-bar{height:10px;border-radius:5px;background:var(--track);overflow:hidden}
+.reason-bar span{display:block;height:100%;background:var(--accent);border-radius:5px}

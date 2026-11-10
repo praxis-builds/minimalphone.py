@@ -289,3 +289,30 @@ describe("weekly review", () => {
     assert.equal(L.weekSummary([], "2026-11-14", at(2026, 11, 15)).units, 5); // Sunday: the Weekend is still open
   });
 });
+
+describe("skip reasons", () => {
+  const walk = (date, status, skipReason) => ({ date, priorities: [], planned: [], focusSessions: [], conclusion: "",
+    moves: [{ id: "move-walk", label: "Walk", status, enabled: true, order: 0, ...(skipReason ? { skipReason } : {}) }] });
+  const days = [
+    walk("2026-11-02", "skipped", "tired"),
+    walk("2026-11-03", "skipped", "work"),
+    walk("2026-11-04", "skipped", "tired"),
+    walk("2026-11-05", "done"),
+    walk("2026-11-06", "skipped"), // no reason given
+    walk("2026-11-07", "skipped", "tired"), // Weekend
+    walk("2026-11-10", "skipped", "forgot"),
+    walk("2026-11-11", "skipped", "bogus"), // unknown reason counts as none
+  ];
+  test("most common reason first, blanks counted as 'none'", () => {
+    assert.deepEqual(L.skipReasonCounts(days, "move-walk", "2026-11-01", "2026-11-30"), [
+      { reason: "tired", count: 3 }, { reason: "none", count: 2 }, { reason: "work", count: 1 }, { reason: "forgot", count: 1 },
+    ]);
+  });
+  test("only the chosen range counts, and other items are ignored", () => {
+    assert.deepEqual(L.skipReasonCounts(days, "move-walk", "2026-11-09", "2026-11-10"), [{ reason: "forgot", count: 1 }]);
+    assert.deepEqual(L.skipReasonCounts(days, "move-read", "2026-11-01", "2026-11-30"), []);
+  });
+  test("the four reasons are fixed", () => {
+    assert.deepEqual(Object.values(L.SKIP_REASONS), ["Tired", "Work", "Forgot", "Didn't matter"]);
+  });
+});

@@ -312,4 +312,21 @@ describe("weekly review, skip reasons, yearly target", () => {
     const row = await env.DB.prepare("SELECT value_json FROM records WHERE entity = 'review' AND key = '2026-11-09'").first();
     expect(JSON.parse(row.value_json).worked).toBe("Early starts");
   });
+
+  it("a skip reason set on one phone reaches the other, and the later edit wins", async () => {
+    const cookie = await signIn();
+    const a = phone(cookie, "a"), b = phone(cookie, "b");
+    await a.client.load(); await b.client.load();
+    a.state.days = [day("2026-11-13", [["p1", "Gym"]])];
+    await a.client.firstSync(a.get, a.apply);
+    await b.client.firstSync(b.get, b.apply, { fresh: true });
+    let clock = Date.now();
+    a.client.now = () => clock; b.client.now = () => clock;
+    clock += 1000; await a.edit((s) => { Object.assign(s.days[0].priorities[0], { status: "skipped", skipReason: "tired" }); });
+    await a.sync(); await b.sync();
+    expect(b.state.days[0].priorities[0]).toMatchObject({ status: "skipped", skipReason: "tired" });
+    clock += 1000; await b.edit((s) => { s.days[0].priorities[0].skipReason = "work"; });
+    await b.sync(); await a.sync();
+    expect(a.state.days[0].priorities[0].skipReason).toBe("work");
+  });
 });

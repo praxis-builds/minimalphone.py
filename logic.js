@@ -14,6 +14,8 @@
   const CONCLUSION_MAX = 500;
   const WEEKEND_CONCLUSION_MAX = 1000;
   const REVIEW_MAX = 300;
+  /** One-tap reasons for a skipped item. Optional: a skip can have none. */
+  const SKIP_REASONS = { tired: "Tired", work: "Work", forgot: "Forgot", unimportant: "Didn't matter" };
 
   function dateKey(date = new Date()) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -177,6 +179,23 @@
     return summarizeUnits(days, start, end, now);
   }
 
+  /**
+   * How often an item was skipped for each reason between start and end,
+   * most common first ("none" = skipped without a reason). Only logged units count.
+   */
+  function skipReasonCounts(days, itemId, start, end) {
+    const counts = new Map();
+    for (const d of days) {
+      if (d.date < unitKey(start) || d.date > end || !isLogged(d)) continue;
+      const item = [...(d.priorities || []), ...(d.moves || [])].find((x) => x.id === itemId);
+      if (!item || item.status !== "skipped") continue;
+      const reason = SKIP_REASONS[item.skipReason] ? item.skipReason : "none";
+      counts.set(reason, (counts.get(reason) || 0) + 1);
+    }
+    const order = [...Object.keys(SKIP_REASONS), "none"];
+    return [...counts].map(([reason, count]) => ({ reason, count })).sort((a, b) => b.count - a.count || order.indexOf(a.reason) - order.indexOf(b.reason));
+  }
+
   /* Weekend merge */
   const RANK = { pending: 0, skipped: 1, done: 2 };
   function mergeItems(a = [], b = [], key) {
@@ -287,6 +306,7 @@
     CONCLUSION_MAX,
     WEEKEND_CONCLUSION_MAX,
     REVIEW_MAX,
+    SKIP_REASONS,
     dateKey,
     parseDate,
     shiftDate,
@@ -304,6 +324,7 @@
     weekStart,
     weekBounds,
     weekSummary,
+    skipReasonCounts,
     score,
     dayScore,
     isLogged,

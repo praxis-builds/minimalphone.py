@@ -14,7 +14,7 @@ It is an installable Progressive Web App (PWA) that keeps priorities, Small Move
 - Dated daily priorities with up to 10 items
 - Up to 10 configurable Small Moves
 - Permanent priorities: a fixed list every new day starts with (Settings → Permanent priorities); retire one to stop it on new days while past days keep it
-- Pending, completed, and skipped daily states
+- Pending, completed, and skipped daily states, with an optional one-tap reason for a skip (tired, work, forgot, didn't matter); Patterns shows the most common reasons per item
 - 80/20 daily scoring
 - Plan Tomorrow and new-day rollover
 - Read-only history with deliberate historical editing

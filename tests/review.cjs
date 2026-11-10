@@ -1,35 +1,9 @@
 // App-level check for the weekly review: it appears when the Weekend is being
 // logged, saves under the week's Monday, survives sanitising and backups, and
 // History lists it. Run: node tests/review.cjs
-const { readFileSync } = require("node:fs");
-const vm = require("node:vm");
 const assert = require("node:assert/strict");
+const { boot, get, vm } = require("./harness.cjs");
 
-const get = (c, expr) => JSON.parse(vm.runInContext(`JSON.stringify(${expr})`, c));
-
-function boot(nowLocal, setup) {
-  const RealDate = Date, now = nowLocal.getTime();
-  class MockDate extends RealDate { constructor(...a) { super(...(a.length ? a : [now])); } static now() { return now; } }
-  const elements = new Map();
-  const node = (tag) => {
-    const el = { tag, value: "", textContent: "", hidden: false, disabled: false, dataset: {}, children: [], attrs: {}, className: "",
-      showModal() {}, append(...k) { el.children.push(...k); }, replaceChildren(...k) { el.children = [...k]; },
-      setAttribute(n, v) { el.attrs[n] = v; }, get childElementCount() { return el.children.length; } };
-    return el;
-  };
-  const element = (id) => { if (!elements.has(id)) elements.set(id, Object.assign(node("div"), { id })); return elements.get(id); };
-  const context = vm.createContext({
-    console, Date: MockDate, Map, Set, URL, crypto: require("node:crypto").webcrypto, setTimeout: (f) => { f(); return 0; }, clearTimeout() {},
-    document: { addEventListener() {}, getElementById: element, querySelector: () => null, createElement: node, activeElement: null },
-    localStorage: { getItem: () => null, setItem() {}, removeItem() {} }, scrollTo() {},
-  });
-  vm.runInContext(readFileSync("logic.js", "utf8"), context);
-  vm.runInContext(readFileSync("script.js", "utf8"), context);
-  context.__setup = setup;
-  context.__el = element;
-  vm.runInContext(`renderAll=()=>{};renderHistory=()=>{};showToast=()=>{};config=defaultConfig();config.identityMigrated=true;fallback=true;__setup({config,days});config=sanitizeConfig(config);`, context);
-  return context;
-}
 const sat = "2026-11-14", mon = "2026-11-09";
 const weekend = { date: sat, priorities: [{ id: "p1", text: "Laundry", status: "done", order: 0 }], planned: [], moves: [], focusSessions: [], conclusion: "", weekend: true };
 const friday = { ...weekend, date: "2026-11-13", weekend: false, priorities: [{ id: "p2", text: "Report", status: "pending", order: 0 }], loggedAt: 1 };

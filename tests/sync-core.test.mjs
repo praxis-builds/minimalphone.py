@@ -71,3 +71,21 @@ test("weekly reviews sync as one record per week", () => {
   const removed = diff(before, explode({ ...config, reviews: { "2026-11-02": config.reviews["2026-11-02"] } }, []), 10);
   assert.ok(removed.length === 1 && removed[0].deleted && removed[0].entity === "review");
 });
+
+test("a skip reason travels with its item and adds nothing for items without one", () => {
+  const days = structuredClone(sample.days);
+  const plain = explode(sample.config, days);
+  const target = days[2].priorities[0];
+  target.status = "skipped"; target.skipReason = "work";
+  const ops = diff(plain, explode(sample.config, days), 7);
+  assert.equal(ops.length, 1);
+  assert.equal(ops[0].value.reason, "work");
+  const back = implode(explode(sample.config, days), sample.config, []);
+  assert.equal(back.days.find((d) => d.date === days[2].date).priorities.find((p) => p.id === target.id).skipReason, "work");
+  // Un-skipping drops the reason from the record: one op, no reason.
+  const skipped = explode(sample.config, days);
+  target.status = "done";
+  const undo = diff(skipped, explode(sample.config, days), 8);
+  assert.equal(undo.length, 1);
+  assert.equal(undo[0].value.reason, undefined);
+});
