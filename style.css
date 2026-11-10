@@ -282,6 +282,7 @@ button {
   --accent-rgb:156,76,42;
   --on-accent:#FBF6EF;
   --sage:#566649;
+  --missed:#3D3936;      /* charcoal: a logged day at 0% */
   --danger:#9E3326;
   --input:#FBF7F1;
   --radius:16px;
@@ -404,7 +405,7 @@ button.heat-cell:focus-visible{outline:2px solid var(--text);outline-offset:1px}
 .heat-cell.l2,.heat-swatch.l2,.heat-dot.l2{background:#D49A7C}
 .heat-cell.l3,.heat-swatch.l3,.heat-dot.l3{background:#B6683F}
 .heat-cell.l4,.heat-swatch.l4,.heat-dot.l4{background:#8E4223}
-.heat-cell.missed,.heat-swatch.missed,.heat-dot.missed{background:var(--sage);background-image:linear-gradient(135deg,transparent 45%,rgba(251,246,239,.75) 45%,rgba(251,246,239,.75) 55%,transparent 55%)}
+.heat-cell.missed,.heat-swatch.missed,.heat-dot.missed{background:var(--missed);background-image:linear-gradient(135deg,transparent 45%,rgba(251,246,239,.75) 45%,rgba(251,246,239,.75) 55%,transparent 55%)}
 .heat-cell.notlogged,.heat-swatch.notlogged,.heat-dot.notlogged{background:transparent;border:1.5px dashed var(--outline)}
 .heat-cell.unmeasured,.heat-dot.unmeasured{background:var(--track)}
 .heat-cell.open,.heat-dot.open{background:transparent;border:2px solid var(--accent)}
@@ -431,7 +432,7 @@ button.heat-cell:focus-visible{outline:2px solid var(--text);outline-offset:1px}
 .history-row-note{font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .history-row-value{font-size:.95rem;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .history-row.notlogged .history-row-name,.history-row.notlogged .history-row-value,.history-row.open .history-row-value{color:var(--muted);font-weight:500}
-.history-row.missed .history-row-value{color:var(--sage)}
+.history-row.missed .history-row-value{color:var(--missed)}
 .heat-dot{width:11px;height:11px;flex:none;border-radius:50%;box-sizing:border-box}
 .link-button{min-height:40px;padding:0 .4rem;border:0;background:transparent;color:var(--accent);font-size:.9rem;font-weight:600;text-decoration:underline;text-underline-offset:3px}
 .month-group{display:grid;gap:.4rem}
@@ -439,3 +440,8 @@ button.heat-cell:focus-visible{outline:2px solid var(--text);outline-offset:1px}
 .month-group>summary::-webkit-details-marker{display:none}
 .month-group>summary h3::after{content:"";display:inline-block;width:7px;height:7px;margin:0 0 .2rem .55rem;border:solid var(--muted);border-width:0 2px 2px 0;transform:rotate(-45deg);transition:transform .15s ease}
 .month-group[open]>summary h3::after{transform:rotate(45deg)}
+
+/* Patterns: missed matches the heatmap */
+.pattern-legend .missed:before{background:var(--missed)}
+.pattern-day.missed{border-left-color:var(--missed)}
+.pattern-day.missed .pattern-day-state{color:var(--missed)}
