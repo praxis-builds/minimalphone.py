@@ -36,7 +36,7 @@ function bind(){
  $("item-form").addEventListener("submit",saveDialogItem);$("item-dialog").addEventListener("close",()=>{$("dialog-error").textContent="";});
  $("conclusion").addEventListener("input",queueConclusion);$("edit-day-button").addEventListener("click",async()=>{if(activeDate>dateKey())return;const day=currentDay();if(!getDay(activeDate)){day.rolloverResolved="archive";await persistDay(day);}editable=true;renderToday();});
  $("history-year").addEventListener("change",renderHistory);$("history-list").addEventListener("click",e=>{const b=e.target.closest("[data-date]");if(b)openHistoricalDay(b.dataset.date);});
- $("history-date-form").addEventListener("submit",e=>{e.preventDefault();openHistoricalDay($("history-date").value);});$("past-move-form").addEventListener("submit",addPastMove);$("return-today").addEventListener("click",backToToday);$("mode-log").addEventListener("click",()=>{activeDate=defaultLogUnit();editable=true;renderToday();scrollTo({top:0,behavior:"smooth"});});$("mode-plan").addEventListener("click",()=>{activeDate=todayKey();editable=true;renderToday();scrollTo({top:0,behavior:"smooth"});});$("item-menu-actions").addEventListener("click",runItemMenuAction);
+ $("history-date-form").addEventListener("submit",e=>{e.preventDefault();openHistoricalDay($("history-date").value);});$("fill-day-toggle").addEventListener("click",()=>{const form=$("history-date-form"),open=form.hidden;form.hidden=!open;$("fill-day-toggle").setAttribute("aria-expanded",String(open));if(open)$("history-date").focus();});$("heatmap").addEventListener("click",e=>{const b=e.target.closest("[data-date]");if(b)openHistoricalDay(b.dataset.date);});$("past-move-form").addEventListener("submit",addPastMove);$("return-today").addEventListener("click",backToToday);$("mode-log").addEventListener("click",()=>{activeDate=defaultLogUnit();editable=true;renderToday();scrollTo({top:0,behavior:"smooth"});});$("mode-plan").addEventListener("click",()=>{activeDate=todayKey();editable=true;renderToday();scrollTo({top:0,behavior:"smooth"});});$("item-menu-actions").addEventListener("click",runItemMenuAction);
  $("open-patterns").addEventListener("click",()=>showView("patterns"));$("patterns-back").addEventListener("click",()=>showView("history"));$("pattern-search").addEventListener("input",renderPatterns);$("pattern-item").addEventListener("change",()=>{patternSelectedId=$("pattern-item").value;renderPatterns();});$("pattern-ranges").addEventListener("click",e=>{const b=e.target.closest("[data-range]");if(!b)return;patternRange=b.dataset.range;$("pattern-custom").hidden=patternRange!=="custom";renderPatterns();});$("apply-pattern-range").addEventListener("click",renderPatterns);$("pattern-timeline").addEventListener("click",e=>{const b=e.target.closest("[data-pattern-date]");if(b)openPatternDay(b.dataset.patternDate);});
  $("profile-form").addEventListener("submit",saveProfile);$("accent-options").addEventListener("click",e=>{const b=e.target.closest("[data-accent]");if(b){config.accent=b.dataset.accent;applyAccent();renderSettings();}});
  ensureBackupUi();$("export-json").addEventListener("click",()=>exportJson());$("export-readable").addEventListener("click",exportReadable);$("import-json").addEventListener("change",importJson);$("backup-merge-start").addEventListener("click",()=>showBackupConfirmation("merge"));$("backup-restore-start").addEventListener("click",()=>showBackupConfirmation("restore"));$("backup-confirm-merge").addEventListener("click",confirmBackupMerge);$("backup-confirm-restore").addEventListener("click",confirmBackupRestore);$("backup-cancel-merge").addEventListener("click",()=>hideBackupConfirmation("merge"));$("backup-cancel-restore").addEventListener("click",()=>hideBackupConfirmation("restore"));$("backup-cancel-import").addEventListener("click",cancelBackupImport);
@@ -242,8 +242,8 @@ function renderHistoryYears(){const years=[...new Set(days.map(d=>d.date.slice(0
 function firstUnit(){const first=days.map(d=>d.date).sort()[0];return first?unitKey(first):todayKey();}
 function clipSummary(from,to){const start=firstUnit()>from?firstUnit():from;return start>to?summarizeUnits([],to,shiftDate(to,-1)):summarizeUnits(days,start,to);}
 function historyUnits(year){const yStart=`${year}-01-01`,yEnd=`${year}-12-31`,first=firstUnit(),start=first>yStart?first:yStart,today=todayKey(),end=today<yEnd?today:yEnd;const keys=start<=end?unitsBetween(start,end):[];days.forEach(d=>{if(d.date.startsWith(year)&&!keys.includes(d.date))keys.push(d.date);});return keys.sort((a,b)=>b.localeCompare(a));}
-function renderHistory(){$("history-date").max=dateKey();if(!$("history-date").value)$("history-date").value=defaultLogUnit();const year=$("history-year").value||String(new Date().getFullYear()),keys=historyUnits(year),records=days.filter(d=>d.date.startsWith(year));$("history-list").replaceChildren();keys.forEach(key=>{const day=getDay(key),open=!canLogUnit(key),state=unitState(day);const b=document.createElement("button");b.type="button";b.className=`history-card ${open?"open":state}`;b.dataset.date=key;const info=document.createElement("span"),strong=document.createElement("strong"),details=document.createElement("small");strong.textContent=isWeekendKey(key)?`Weekend, ${unitDateText(key)}`:`${parseDate(key).toLocaleDateString(undefined,{weekday:"long"})}, ${formatDate(key)}`;const pct=document.createElement("span");pct.className="history-score";if(open){details.textContent=lockNote(key);pct.textContent="—";}else if(state==="notlogged"){details.textContent="Not logged";pct.textContent="—";}else{const s=dayScore(day),p=score(day.priorities),m=score(day.moves),items=[...day.priorities,...day.moves.filter(x=>x.enabled!==false)],pending=items.filter(x=>validStatus(x.status)==="pending").length,skipped=items.filter(x=>validStatus(x.status)==="skipped").length;details.textContent=`${state==="missed"?"Missed · ":""}Priorities ${p.done}/${p.total} · Moves ${m.done}/${m.total} · ${pending} pending · ${skipped} skipped${day.conclusion?" · Conclusion saved":""}`;pct.textContent=s.percent===null?"—":`${s.percent}%`;}info.append(strong,details);b.append(info,pct);$("history-list").append(b);});$("history-empty").hidden=keys.length>0;renderYearSummary(records,year);}
-function renderYearSummary(records,year){const sum=clipSummary(`${year}-01-01`,`${year}-12-31`),counted=new Set(sum.keys),loggedRecords=records.filter(d=>counted.has(d.date)&&isLogged(d)),streaks=calculateStreaks(records),pc=loggedRecords.reduce((n,d)=>n+score(d.priorities).done,0),mc=loggedRecords.reduce((n,d)=>n+score(d.moves).done,0),pctText=v=>v===null?"Not measured":`${v}%`;const stats=[["Logged",`${sum.logged} / ${sum.units}`],["Not logged",sum.notLogged],["Missed",sum.missed],["Average overall",pctText(sum.average)],["80% days",`${sum.reached} (${sum.measured?Math.round(sum.reached/sum.measured*100):0}%)`]];if(year===String(new Date().getFullYear())){const wk=weekUnits(dateKey()),now=new Date(),mStart=dateKey(new Date(now.getFullYear(),now.getMonth(),1)),mEnd=dateKey(new Date(now.getFullYear(),now.getMonth()+1,0));stats.push(["This week",pctText(clipSummary(wk[0],wk.at(-1)).average)],["This month",pctText(clipSummary(mStart,mEnd).average)]);}stats.push(["Current streak",streaks.current],["Longest streak",streaks.longest],["Priorities completed",pc],["Small Moves completed",mc]);const root=$("year-stats");root.replaceChildren();stats.forEach(([label,value])=>{const d=document.createElement("div"),s=document.createElement("strong"),l=document.createElement("span");d.className="stat";s.textContent=value;l.textContent=label;d.append(s,l);root.append(d);});const months=Array.from({length:12},(_,month)=>{const mStart=dateKey(new Date(Number(year),month,1)),mEnd=dateKey(new Date(Number(year),month+1,0));return{month,avg:clipSummary(mStart,mEnd).average};}),best=months.filter(m=>m.avg!==null).sort((a,b)=>b.avg-a.avg)[0];if(best){const d=document.createElement("div"),s=document.createElement("strong"),l=document.createElement("span");d.className="stat";s.textContent=monthName(best.month);l.textContent=`Strongest month (${best.avg}%)`;d.append(s,l);root.append(d);}const bars=$("monthly-bars");bars.replaceChildren();months.forEach(m=>{const row=document.createElement("div"),label=document.createElement("span"),bar=document.createElement("span"),fill=document.createElement("span"),value=document.createElement("span");row.className="month-row";label.textContent=monthName(m.month,true);bar.className="bar";fill.style.width=`${m.avg||0}%`;bar.append(fill);value.textContent=m.avg===null?"—":`${m.avg}%`;row.append(label,bar,value);bars.append(row);});}
+
+
 function calculateStreaks(records){return unitStreaks(records);}
 function openHistoricalDay(date){if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||dateKey(parseDate(date))!==date||date>dateKey())return showToast("Choose a valid date up to today.");date=unitKey(date);activeDate=date;editable=false;showView("today");renderToday();scrollTo({top:0,behavior:"smooth"});}
 
@@ -440,4 +440,98 @@ function renderSync(){
   list.replaceChildren(...s.conflicts.map(c=>{const li=document.createElement("li");li.textContent=describeConflict(c);return li;}));
   $("sync-conflict-count").textContent=`(${s.conflicts.length})`;
   $("sync-conflicts-box").hidden=!s.conflicts.length;
+}
+
+/* ---------- History (Clay, with the week heatmap) ---------- */
+function unitLevel(key){
+  if(!canLogUnit(key))return "open";
+  const day=getDay(key),state=unitState(day);
+  if(state==="notlogged")return "notlogged";
+  if(state==="missed")return "missed";
+  const p=dayScore(day).percent;
+  if(p===null)return "unmeasured";
+  return p>=80?"l4":p>=60?"l3":p>=40?"l2":"l1";
+}
+function unitShortName(key){
+  if(isWeekendKey(key)){const a=parseDate(key),b=parseDate(unitEnd(key));return a.getMonth()===b.getMonth()?`Weekend · ${a.getDate()}–${b.getDate()}`:`Weekend · ${formatDate(key)}`;}
+  const d=parseDate(key);return `${d.toLocaleDateString(undefined,{weekday:"long"})} ${d.getDate()}`;
+}
+function unitValueText(key,level){
+  if(level==="open")return isWeekendKey(key)?"Log on Monday":"Log tomorrow";
+  if(level==="notlogged")return "Not logged";
+  if(level==="missed")return "Missed";
+  if(level==="unmeasured")return "—";
+  return `${dayScore(getDay(key)).percent}%`;
+}
+function renderHistory(){
+  $("history-date").max=dateKey();
+  if(!$("history-date").value)$("history-date").value=defaultLogUnit();
+  const year=$("history-year").value||String(new Date().getFullYear()),keys=historyUnits(year),records=days.filter(d=>d.date.startsWith(year));
+  renderYearSummary(records,year);
+  renderHeatmap(year);
+  const list=$("history-list");list.replaceChildren();
+  let group=null,groupMonth="";
+  keys.forEach(key=>{
+    const d=parseDate(key),monthKey=key.slice(0,7);
+    if(monthKey!==groupMonth){
+      groupMonth=monthKey;
+      // One collapsible section per month; only the most recent starts open.
+      const section=document.createElement("details"),head=document.createElement("summary"),h=document.createElement("h3"),meta=document.createElement("span");
+      section.className="month-group";section.open=!list.childElementCount;
+      head.className="month-head";h.textContent=monthName(d.getMonth());
+      const mStart=`${monthKey}-01`,mEnd=dateKey(new Date(d.getFullYear(),d.getMonth()+1,0)),sum=clipSummary(mStart,mEnd);
+      meta.textContent=sum.units?`${sum.logged} of ${sum.units} logged${sum.average===null?"":` · ${sum.average}%`}`:"";
+      head.append(h,meta);
+      group=document.createElement("div");group.className="card month-days";
+      section.append(head,group);list.append(section);
+    }
+    const level=unitLevel(key),b=document.createElement("button");
+    b.type="button";b.className=`history-row ${level}`;b.dataset.date=key;
+    const dot=document.createElement("span"),name=document.createElement("span"),value=document.createElement("span");
+    dot.className=`heat-dot ${level}`;dot.setAttribute("aria-hidden","true");
+    name.className="history-row-name";name.textContent=unitShortName(key);
+    value.className="history-row-value";value.textContent=unitValueText(key,level);
+    const day=getDay(key);
+    if(day?.conclusion&&level!=="notlogged"){const note=document.createElement("small");note.className="history-row-note";note.textContent=day.conclusion;name.append(note);}
+    b.append(dot,name,value);group.append(b);
+  });
+  $("history-empty").hidden=keys.length>0;
+}
+function renderYearSummary(records,year){
+  const sum=clipSummary(`${year}-01-01`,`${year}-12-31`),counted=new Set(sum.keys),loggedRecords=records.filter(d=>counted.has(d.date)&&isLogged(d)),streaks=calculateStreaks(records);
+  const tiles=[[sum.average===null?"—":`${sum.average}%`,"average logged day"],[`${sum.logged}`,`of ${sum.units} days logged`],[`${sum.reached}`,"days at 80% or more"],[`${streaks.longest}`,"longest streak"]];
+  const root=$("year-stats");root.replaceChildren();
+  tiles.forEach(([value,label])=>{const d=document.createElement("div"),s=document.createElement("strong"),l=document.createElement("span");d.className="year-tile";s.textContent=value;l.textContent=label;d.append(s,l);root.append(d);});
+  const months=Array.from({length:12},(_,month)=>{const s=clipSummary(dateKey(new Date(Number(year),month,1)),dateKey(new Date(Number(year),month+1,0)));return{month,avg:s.average,units:s.units};}).filter(m=>m.units>0);
+  const best=months.filter(m=>m.avg!==null).sort((a,b)=>b.avg-a.avg)[0];
+  const extra=[`${sum.notLogged} not logged`,`${sum.missed} missed`,`current streak ${streaks.current}`];
+  if(year===String(new Date().getFullYear())){const wk=weekUnits(dateKey()),lastWk=weekUnits(shiftDate(dateKey(),-7)),thisW=clipSummary(wk[0],wk.at(-1)).average,lastW=clipSummary(lastWk[0],lastWk.at(-1)).average;if(thisW!==null)extra.push(`this week ${thisW}%`);if(lastW!==null)extra.push(`last week ${lastW}%`);}
+  if(best)extra.push(`best month ${monthName(best.month)} (${best.avg}%)`);
+  extra.push(`${loggedRecords.reduce((n,d)=>n+score(d.priorities).done,0)} priorities and ${loggedRecords.reduce((n,d)=>n+score(d.moves).done,0)} Small Moves done`);
+  $("year-extra").textContent=extra.join(" · ");
+  const bars=$("monthly-bars");bars.replaceChildren();
+  months.forEach(m=>{const col=document.createElement("div"),value=document.createElement("span"),bar=document.createElement("span"),fill=document.createElement("span"),label=document.createElement("span");col.className="month-col";value.className="month-value";value.textContent=m.avg===null?"—":`${m.avg}%`;bar.className="month-bar";fill.style.height=`${m.avg||0}%`;fill.className=m.avg!==null&&best&&m.month===best.month?"best":"";bar.append(fill);label.className="month-label";label.textContent=monthName(m.month,true);col.append(value,bar,label);bars.append(col);});
+  $("months-section").hidden=months.length===0;
+}
+function renderHeatmap(year){
+  const root=$("heatmap");root.replaceChildren();
+  const yStart=`${year}-01-01`,yEnd=`${year}-12-31`,first=firstUnit(),start=first>yStart?first:yStart,today=dateKey(),end=today<yEnd?today:yEnd;
+  if(start>end){$("heat-section").hidden=true;return;}
+  $("heat-section").hidden=false;
+  const monday=k=>shiftDate(k,-((parseDate(k).getDay()+6)%7));
+  const weeks=[];for(let w=monday(end);w>=monday(start);w=shiftDate(w,-7))weeks.push(w);
+  weeks.forEach(w=>{
+    const row=document.createElement("div"),label=document.createElement("span");
+    row.className="heat-row";label.className="heat-label";
+    const d=parseDate(w);label.textContent=`${monthName(d.getMonth(),true)} ${d.getDate()}`;
+    row.append(label);
+    weekUnits(w).forEach(u=>{
+      if(u<start||u>yEnd||u>todayKey()){const blank=document.createElement("span");blank.className="heat-cell blank";blank.setAttribute("aria-hidden","true");row.append(blank);return;}
+      const level=unitLevel(u),cell=document.createElement("button");
+      cell.type="button";cell.className=`heat-cell ${level}`;cell.dataset.date=u;
+      cell.setAttribute("aria-label",`${isWeekendKey(u)?`Weekend of ${unitDateText(u)}`:formatDate(u)}: ${unitValueText(u,level)}`);
+      row.append(cell);
+    });
+    root.append(row);
+  });
 }

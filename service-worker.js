@@ -1,4 +1,4 @@
-const CACHE_NAME = "minimal-daily-os-1.4.0-clay-day-1";
+const CACHE_NAME = "minimal-daily-os-1.4.1-clay-history-1";
 
 const APP_SHELL = [
     "./",

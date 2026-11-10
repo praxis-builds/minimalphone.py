@@ -372,3 +372,70 @@ dialog.sheet{margin:auto auto 0;width:min(100vw,560px);max-width:100vw;border:0;
 .sheet-action.danger{color:var(--danger);background:var(--bg)}
 .sheet-card .pill{justify-self:stretch;min-height:48px;margin-top:.3rem}
 .add-row input:placeholder-shown ~ .add-submit{display:none}
+
+/* ---------- History (Clay + week heatmap) ---------- */
+.history-view{max-width:560px;margin:0 auto}
+.history-head{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;padding:.6rem .25rem 0}
+.history-kicker{margin:0;font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--sage)}
+.history-view h1{margin:0}
+.year-picker{display:inline-flex;position:relative;font-weight:400}
+.year-picker select{appearance:none;-webkit-appearance:none;width:auto;min-height:0;border:0;background:transparent;padding:0 1.6rem 0 0;font-family:var(--serif);font-size:2.9rem;line-height:1.05;color:var(--text);cursor:pointer;border-radius:8px}
+.year-picker::after{content:"";position:absolute;right:.25rem;top:50%;width:9px;height:9px;border:solid var(--muted);border-width:0 2px 2px 0;transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.fill-form{margin-top:.9rem;padding:.9rem 1rem;background:var(--panel);border-radius:var(--radius);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.5rem;align-items:end}
+.fill-form label{grid-column:1/-1;font-size:.85rem;font-weight:600;color:var(--text-soft)}
+.fill-form button{min-height:48px}
+.fill-note{grid-column:1/-1;margin:0;font-size:.85rem;color:var(--muted)}
+.year-block{margin-top:1rem}
+.year-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.year-tile{background:var(--panel);border-radius:var(--radius);padding:.8rem .9rem;display:grid;gap:2px}
+.year-tile strong{font-family:var(--serif);font-size:1.75rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.year-tile span{font-size:.82rem;color:var(--muted)}
+.year-extra{margin:.6rem .25rem 0;font-size:.85rem;line-height:1.5;color:var(--text-soft)}
+/* Heatmap: one row per week, Mon–Fri + Weekend */
+.heat-card{padding:.7rem .7rem .8rem}
+.heat-row{display:grid;grid-template-columns:3.4rem repeat(6,minmax(0,1fr));gap:4px;align-items:center}
+.heat-head{font-size:.72rem;font-weight:600;color:var(--muted);text-align:center;margin-bottom:4px}
+.heatmap{display:grid;gap:4px}
+.heat-label{font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.heat-cell{display:block;height:26px;min-height:26px;padding:0;border:0;border-radius:6px;background:transparent}
+button.heat-cell{cursor:pointer}
+button.heat-cell:focus-visible{outline:2px solid var(--text);outline-offset:1px}
+.heat-cell.l1,.heat-swatch.l1,.heat-dot.l1{background:#E8C9B8}
+.heat-cell.l2,.heat-swatch.l2,.heat-dot.l2{background:#D49A7C}
+.heat-cell.l3,.heat-swatch.l3,.heat-dot.l3{background:#B6683F}
+.heat-cell.l4,.heat-swatch.l4,.heat-dot.l4{background:#8E4223}
+.heat-cell.missed,.heat-swatch.missed,.heat-dot.missed{background:var(--sage);background-image:linear-gradient(135deg,transparent 45%,rgba(251,246,239,.75) 45%,rgba(251,246,239,.75) 55%,transparent 55%)}
+.heat-cell.notlogged,.heat-swatch.notlogged,.heat-dot.notlogged{background:transparent;border:1.5px dashed var(--outline)}
+.heat-cell.unmeasured,.heat-dot.unmeasured{background:var(--track)}
+.heat-cell.open,.heat-dot.open{background:transparent;border:2px solid var(--accent)}
+.heat-legend{display:flex;flex-wrap:wrap;gap:.35rem .9rem;margin-top:.75rem;font-size:.78rem;color:var(--text-soft)}
+.heat-legend span{display:inline-flex;align-items:center;gap:.35rem}
+.heat-swatch{display:inline-block;width:14px;height:14px;border-radius:4px}
+/* Month strip */
+.month-strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:10px;padding:.8rem 1rem}
+.month-col{display:grid;justify-items:center;gap:4px}
+.month-value{font-size:.78rem;color:var(--text-soft);font-variant-numeric:tabular-nums}
+.month-bar{width:100%;height:56px;display:flex;align-items:flex-end;background:var(--track);border-radius:6px;overflow:hidden}
+.month-bar span{display:block;width:100%;background:#C98D6E;border-radius:6px}
+.month-bar span.best{background:var(--accent)}
+.month-label{font-size:.78rem;color:var(--muted)}
+/* Days, grouped by month */
+.history-list{display:grid;gap:.4rem}
+.month-head{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;padding:.7rem .25rem 0}
+.month-head h3{margin:0;font-family:var(--serif);font-size:1.25rem;font-weight:600}
+.month-head span{font-size:.82rem;color:var(--muted)}
+.month-days{padding:2px 12px}
+.history-row{width:100%;display:flex;align-items:center;gap:.75rem;min-height:48px;padding:.4rem 0;border:0;border-top:1px solid var(--rule);border-radius:0;background:transparent;color:var(--text);font-weight:400;text-align:left}
+.history-row:first-child{border-top:0}
+.history-row-name{flex:1;min-width:0;display:grid;font-size:.95rem}
+.history-row-note{font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-row-value{font-size:.95rem;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.history-row.notlogged .history-row-name,.history-row.notlogged .history-row-value,.history-row.open .history-row-value{color:var(--muted);font-weight:500}
+.history-row.missed .history-row-value{color:var(--sage)}
+.heat-dot{width:11px;height:11px;flex:none;border-radius:50%;box-sizing:border-box}
+.link-button{min-height:40px;padding:0 .4rem;border:0;background:transparent;color:var(--accent);font-size:.9rem;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.month-group{display:grid;gap:.4rem}
+.month-group>summary{list-style:none;cursor:pointer;min-height:44px;align-items:center;border-radius:10px}
+.month-group>summary::-webkit-details-marker{display:none}
+.month-group>summary h3::after{content:"";display:inline-block;width:7px;height:7px;margin:0 0 .2rem .55rem;border:solid var(--muted);border-width:0 2px 2px 0;transform:rotate(-45deg);transition:transform .15s ease}
+.month-group[open]>summary h3::after{transform:rotate(45deg)}
