@@ -97,6 +97,30 @@ The first upload is safe to repeat: **Upload this phone again** sends the same r
 
 If the old phone is lost, use **Sign out everywhere** from the new phone. That ends every session, including the lost phone's.
 
+## Evening reminder
+
+The reminder is a separate Worker, `minimal-reminder`, because Pages Functions cannot run on a schedule. It shares the `minimal` database and runs every 15 minutes (cron is in UTC; the Worker works out Toronto time itself, including daylight saving). It has no public address.
+
+1. **Deploy the Worker** (first time and after changes to `api/reminder.js`):
+
+   ```bash
+   npm run deploy:reminder
+   ```
+
+2. **Create the push keys.** This generates a VAPID key pair and stores it as secrets on both the Pages project and the Worker. The private key is piped straight into wrangler and never shown:
+
+   ```bash
+   npm run setup:push-keys
+   ```
+
+   Then redeploy the Pages project so it picks the secrets up: `npm run deploy`.
+
+3. **On each phone:** Settings → Check-in and milestone → Phone notification → **Turn on notifications**, then **Send a test**. On iPhone, open Minimal from the Home Screen icon first (iOS 16.4 or later).
+
+The rule: after the check-in time, if the latest loggable unit has nothing logged on the server, every subscribed phone gets one notice. The day is recorded in `reminder_log` before sending, so it is never sent twice. Subscriptions that the push service reports as gone are removed.
+
+Running `setup:push-keys` again replaces the keys; each phone then has to turn notifications on again.
+
 ## Deleting the server copy
 
 "Clear all data" in the app only clears the phone it runs on. To delete everything stored in Cloudflare:

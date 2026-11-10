@@ -10,11 +10,16 @@
     "dev": "npm run build && wrangler pages dev",
     "db:migrate:local": "wrangler d1 migrations apply minimal --local",
     "db:migrate:remote": "wrangler d1 migrations apply minimal --remote",
-    "deploy": "npm run build && wrangler pages deploy"
+    "deploy": "npm run build && wrangler pages deploy",
+    "deploy:reminder": "wrangler deploy --config reminder/wrangler.toml",
+    "setup:push-keys": "node scripts/setup-push-keys.mjs"
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "1.4.7",
     "vitest": "4.1.12",
     "wrangler": "4.152.0"
+  },
+  "dependencies": {
+    "@block65/webcrypto-web-push": "2.0.0"
   }
 }

@@ -26,6 +26,7 @@ It is an installable Progressive Web App (PWA) that keeps priorities, Small Move
 - Profiles, clock preferences, and restrained accent choices
 - JSON backup and restore
 - Optional Sync through your own Cloudflare account (offline-first, latest edit wins per item, conflict list)
+- Evening reminder as a phone notification if yesterday (or the Weekend) is not logged; at most one a day
 - Installable iPhone Home Screen experience
 - Offline access after the first successful load
 
@@ -47,6 +48,15 @@ Weekend records are stored under Saturday's date. When this version first runs, 
 - Before anything changes, a full copy of the stored data is saved in browser storage under `minimal.backup.pre-weekend`. If that copy cannot be saved, the merge is postponed.
 - An item is done if it was done on either day. Plans, focus sessions and both conclusions are kept (as `Sat: …` / `Sun: …`).
 - The merge is safe to run more than once. It also runs after you merge in a JSON backup, so older backups import cleanly.
+
+## Evening reminder
+
+If Sync is on, Minimal can send one short phone notification in the evening, Toronto time, after the check-in time set in Settings, when the latest day you can log (yesterday, or the Weekend on Monday) is not logged yet. It never sends more than one a day.
+
+- Turn it on in **Settings → Check-in and milestone → Phone notification**, on each phone.
+- **On iPhone this needs iOS 16.4 or later, and Minimal must be installed to the Home Screen** (Share → Add to Home Screen) and opened from there. Safari tabs cannot receive notifications.
+- The check runs on Cloudflare every 15 minutes, so a day you logged while offline still counts as not logged until the phone syncs.
+- Setup for the person who deploys Minimal is in [docs/SYNC.md](docs/SYNC.md#evening-reminder).
 
 ## Privacy model
 
@@ -130,6 +140,8 @@ That runs `tests/logic.test.js` and `tests/sync-core.test.mjs` (Node), `tests/hi
 - `migrations/` — D1 database schema
 - `scripts/build.mjs` — builds `dist/` for Cloudflare Pages
 - `docs/SYNC.md` — Cloudflare setup, deploy and restore
+- `api/reminder.js`, `reminder/` — the evening reminder rule and its scheduled Worker
+- `scripts/setup-push-keys.mjs` — creates the push keys and stores them as Cloudflare secrets
 - `tests/` — unit and regression tests (see [Tests](#tests))
 - `fonts/` — Fraunces and Figtree (Latin subsets), self-hosted under the SIL Open Font License (`OFL-*.txt`)
 - `manifest.webmanifest` — PWA metadata

@@ -39,6 +39,9 @@ jobs:
           node --check sync-core.js
           node --check sync-client.js
           node --check api/app.js
+          node --check api/reminder.js
+          node --check reminder/worker.js
+          node --check scripts/setup-push-keys.mjs
 
       - name: Run tests
         run: |

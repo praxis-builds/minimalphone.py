@@ -1,4 +1,4 @@
-const CACHE_NAME = "minimal-daily-os-1.5.0-permanent-1";
+const CACHE_NAME = "minimal-daily-os-1.6.0-reminder-1";
 
 const APP_SHELL = [
     "./",
@@ -91,6 +91,38 @@ self.addEventListener("fetch", (event) => {
                 return response;
             });
             return cached || network;
+        })
+    );
+});
+
+// Evening reminder (Web Push). The server sends {title, body, url}.
+self.addEventListener("push", (event) => {
+    let data = {};
+    try {
+        data = event.data ? event.data.json() : {};
+    } catch {
+        data = { title: "Minimal", body: event.data ? event.data.text() : "" };
+    }
+    event.waitUntil(
+        self.registration.showNotification(data.title || "Minimal", {
+            body: data.body || "",
+            tag: "minimal-log",
+            icon: "./icon-192.png",
+            badge: "./icon-192.png",
+            data: { url: data.url || "./" }
+        })
+    );
+});
+
+self.addEventListener("notificationclick", (event) => {
+    event.notification.close();
+    const url = new URL(event.notification.data?.url || "./", self.registration.scope).href;
+    event.waitUntil(
+        self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+            for (const client of windows) {
+                if (client.url.startsWith(self.registration.scope) && "focus" in client) return client.focus();
+            }
+            return self.clients.openWindow(url);
         })
     );
 });

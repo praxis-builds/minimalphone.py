@@ -41,7 +41,7 @@ function bind(){
  $("profile-form").addEventListener("submit",saveProfile);$("accent-options").addEventListener("click",e=>{const b=e.target.closest("[data-accent]");if(b){config.accent=b.dataset.accent;applyAccent();renderSettings();persistConfig();}});
  ensureBackupUi();$("export-json").addEventListener("click",()=>exportJson());$("export-readable").addEventListener("click",exportReadable);$("import-json").addEventListener("change",importJson);$("backup-merge-start").addEventListener("click",()=>showBackupConfirmation("merge"));$("backup-restore-start").addEventListener("click",()=>showBackupConfirmation("restore"));$("backup-confirm-merge").addEventListener("click",confirmBackupMerge);$("backup-confirm-restore").addEventListener("click",confirmBackupRestore);$("backup-cancel-merge").addEventListener("click",()=>hideBackupConfirmation("merge"));$("backup-cancel-restore").addEventListener("click",()=>hideBackupConfirmation("restore"));$("backup-cancel-import").addEventListener("click",cancelBackupImport);
  $("clear-data").addEventListener("click",()=>{$("clear-confirm").hidden=false;$("clear-phrase").focus();});$("cancel-clear").addEventListener("click",()=>{$("clear-confirm").hidden=true;});$("confirm-clear").addEventListener("click",clearAll);
- $("share-feedback").addEventListener("click",shareFeedback);bindSync();$("rollover-dialog").addEventListener("close",finishRollover);["milestone-enabled","reminder-enabled","reminder-time"].forEach(id=>$(id).addEventListener("change",savePrompts));["display-name","initials","location-label"].forEach(id=>$(id).addEventListener("input",queueProfileSave));$("permanent-form").addEventListener("submit",addPermanent);["permanent-list","retired-list"].forEach(id=>$(id).addEventListener("click",e=>{const b=e.target.closest("[data-action=menu]"),li=e.target.closest("[data-id]");if(b&&li)openPermanentMenu(id,li);}));$("settings-view").addEventListener("click",e=>{const open=e.target.closest("[data-settings-page]");if(open)return showSettingsPage(open.dataset.settingsPage);if(e.target.closest("[data-settings-back]"))showSettingsPage(null);});$("dismiss-reminder").addEventListener("click",dismissReminder);$("active-focus-bar").addEventListener("click",showFocusLayer);document.querySelectorAll("[data-focus-minutes]").forEach(b=>b.addEventListener("click",()=>setFocusDuration(Number(b.dataset.focusMinutes))));$("set-custom-focus").addEventListener("click",()=>setFocusDuration(Number($("custom-focus-minutes").value)));$("focus-start").addEventListener("click",startFocusTimer);$("focus-pause").addEventListener("click",pauseFocusTimer);$("focus-reset").addEventListener("click",resetFocusTimer);$("focus-back").addEventListener("click",backToToday);$("focus-break").addEventListener("click",startFocusBreak);$("focus-mark-done").addEventListener("click",markFocusedItemDone);
+ $("share-feedback").addEventListener("click",shareFeedback);bindSync();$("rollover-dialog").addEventListener("close",finishRollover);["milestone-enabled","reminder-enabled","reminder-time"].forEach(id=>$(id).addEventListener("change",savePrompts));["display-name","initials","location-label"].forEach(id=>$(id).addEventListener("input",queueProfileSave));$("permanent-form").addEventListener("submit",addPermanent);$("push-on").addEventListener("click",turnOnPush);$("push-off").addEventListener("click",turnOffPush);$("push-test").addEventListener("click",testPush);["permanent-list","retired-list"].forEach(id=>$(id).addEventListener("click",e=>{const b=e.target.closest("[data-action=menu]"),li=e.target.closest("[data-id]");if(b&&li)openPermanentMenu(id,li);}));$("settings-view").addEventListener("click",e=>{const open=e.target.closest("[data-settings-page]");if(open)return showSettingsPage(open.dataset.settingsPage);if(e.target.closest("[data-settings-back]"))showSettingsPage(null);});$("dismiss-reminder").addEventListener("click",dismissReminder);$("active-focus-bar").addEventListener("click",showFocusLayer);document.querySelectorAll("[data-focus-minutes]").forEach(b=>b.addEventListener("click",()=>setFocusDuration(Number(b.dataset.focusMinutes))));$("set-custom-focus").addEventListener("click",()=>setFocusDuration(Number($("custom-focus-minutes").value)));$("focus-start").addEventListener("click",startFocusTimer);$("focus-pause").addEventListener("click",pauseFocusTimer);$("focus-reset").addEventListener("click",resetFocusTimer);$("focus-back").addEventListener("click",backToToday);$("focus-break").addEventListener("click",startFocusBreak);$("focus-mark-done").addEventListener("click",markFocusedItemDone);
 }
 
 function defaultConfig(){return{key:"main",version:VERSION,name:"",initials:"",locationLabel:"",accent:"mint",milestoneEnabled:true,reminder:{enabled:false,time:"18:00"},focusTimer:null,moves:[],items:[],permanent:[],identityMigrated:false,launchers:DEFAULT_LAUNCHERS,updatedAt:Date.now(),lastDate:null,lastExportAt:null,weekendMigratedAt:null,migrated:false};}
@@ -562,6 +562,7 @@ function queueProfileSave(){
 }
 function showSettingsPage(name){
   const home=$("settings-home");if(!home)return;
+  if(name==="prompts"){pushMessage="";renderPush();}
   home.hidden=Boolean(name);
   document.querySelectorAll(".settings-page").forEach(p=>{p.hidden=p.dataset.page!==name;});
   renderSettingsHome();
@@ -641,4 +642,55 @@ async function renamePermanent(id,value){
   const today=getDay(todayKey()),item=today?.priorities.find(x=>x.id===id);
   if(item){item.text=value;await persistDay(today);}
   await persistConfig();renderAll();
+}
+
+/* ---------- Phone notification for the evening reminder (M3) ---------- */
+const pushSupported=()=>"serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window;
+const isStandalone=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+const isIOS=()=>/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+let pushMessage="";
+function base64UrlToBytes(value){const pad="=".repeat((4-value.length%4)%4),raw=atob((value+pad).replace(/-/g,"+").replace(/_/g,"/"));return Uint8Array.from(raw,c=>c.charCodeAt(0));}
+async function currentPushSubscription(){if(!pushSupported())return null;try{const reg=await navigator.serviceWorker.getRegistration();return reg?await reg.pushManager.getSubscription():null;}catch{return null;}}
+async function pushApi(path,body){const res=await fetch(path,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body),credentials:"same-origin"});const data=await res.json().catch(()=>({}));if(res.status===401)throw new Error("Sign in to Sync first: the reminder is sent from your Cloudflare copy.");if(!res.ok)throw new Error(data.error||`Request failed (${res.status}).`);return data;}
+async function renderPush(){
+  if(!$("push-status"))return;
+  const sub=await currentPushSubscription(),signedIn=Boolean(syncClient?.state?.signedIn);
+  let status;
+  if(!pushSupported())status=isIOS()&&!isStandalone()?"Add Minimal to the Home Screen first, then open it from there (iOS 16.4 or later).":"This browser cannot show notifications from Minimal.";
+  else if(Notification.permission==="denied")status="Notifications are blocked for Minimal. Allow them in the phone's settings, then try again.";
+  else if(sub)status=`On for this phone. The notice comes after ${config.reminder?.time||"18:00"} if a day is not logged.`;
+  else if(!signedIn)status="Off. Sign in to Sync first: the reminder is sent from your Cloudflare copy.";
+  else status="Off for this phone.";
+  $("push-status").textContent=pushMessage||status;
+  $("push-on").hidden=Boolean(sub)||!pushSupported();
+  $("push-test").hidden=!sub;$("push-off").hidden=!sub;
+}
+async function turnOnPush(){
+  pushMessage="";
+  try{
+    if(!syncClient?.state?.signedIn)throw new Error("Sign in to Sync first: the reminder is sent from your Cloudflare copy.");
+    const permission=await Notification.requestPermission();
+    if(permission!=="granted")throw new Error("Notifications were not allowed.");
+    const keyRes=await fetch("/api/push/key",{credentials:"same-origin"}),key=await keyRes.json().catch(()=>({}));
+    if(!keyRes.ok)throw new Error(key.error||"Notifications are not set up on the server yet.");
+    const reg=await navigator.serviceWorker.ready;
+    const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:base64UrlToBytes(key.publicKey)});
+    await pushApi("/api/push/subscribe",sub.toJSON());
+    showToast("Notifications are on for this phone.");
+  }catch(error){pushMessage=error.message;}
+  renderPush();
+}
+async function turnOffPush(){
+  pushMessage="";
+  const sub=await currentPushSubscription();
+  try{if(sub){await pushApi("/api/push/unsubscribe",{endpoint:sub.endpoint}).catch(()=>{});await sub.unsubscribe();}showToast("Notifications are off for this phone.");}
+  catch(error){pushMessage=error.message;}
+  renderPush();
+}
+async function testPush(){
+  pushMessage="";
+  const sub=await currentPushSubscription();
+  try{if(!sub)throw new Error("Turn notifications on first.");await pushApi("/api/push/test",sub.toJSON());pushMessage="Test sent. It should arrive in a few seconds.";}
+  catch(error){pushMessage=error.message;}
+  renderPush();
 }

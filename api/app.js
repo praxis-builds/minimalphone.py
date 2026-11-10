@@ -2,6 +2,7 @@
 // and as a plain Worker in the tests (api/test-worker.js). Bindings: DB (D1),
 // APP_PASSCODE (secret). Nothing here logs request bodies or entry content.
 import { LIMITS, recordId, sameValue, stable, validateOp, wins } from "../sync-core.js";
+import { webPushSender } from "./reminder.js";
 
 const COOKIE = "minimal_session";
 const SESSION_DAYS = 180;
@@ -30,6 +31,10 @@ export async function handle(request, env, now = Date.now()) {
     if (path === "/api/logout-all" && request.method === "POST") return await logout(env, session, true);
     if (path === "/api/sync" && request.method === "POST") return await sync(request, env, now);
     if (path === "/api/conflicts/seen" && request.method === "POST") return await conflictsSeen(request, env, now);
+    if (path === "/api/push/key" && request.method === "GET") return env.VAPID_PUBLIC_KEY ? json({ publicKey: env.VAPID_PUBLIC_KEY }) : fail(503, "Notifications are not set up on the server yet.");
+    if (path === "/api/push/subscribe" && request.method === "POST") return await pushSubscribe(request, env, now);
+    if (path === "/api/push/unsubscribe" && request.method === "POST") return await pushUnsubscribe(request, env);
+    if (path === "/api/push/test" && request.method === "POST") return await pushTest(request, env);
     return fail(404, "not found");
   } catch (error) {
     // Report the failure without echoing any stored or submitted content.
@@ -192,4 +197,42 @@ async function conflictsSeen(request, env, now) {
   const ids = Array.isArray(body?.ids) ? body.ids.filter(Number.isInteger).slice(0, 200) : [];
   if (ids.length) await env.DB.prepare(`UPDATE conflicts SET seen_at = ? WHERE id IN (${ids.map(() => "?").join(",")})`).bind(now, ...ids).run();
   return json({ ok: true, marked: ids.length });
+}
+
+/* ---------- Web Push subscriptions (evening reminder) ---------- */
+const B64URL = /^[A-Za-z0-9_-]+={0,2}$/;
+function readSubscription(body) {
+  const endpoint = typeof body?.endpoint === "string" ? body.endpoint : "";
+  const keys = body?.keys || {};
+  let url;
+  try { url = new URL(endpoint); } catch { return null; }
+  if (url.protocol !== "https:" || endpoint.length > 1000) return null;
+  if (typeof keys.p256dh !== "string" || typeof keys.auth !== "string" || !B64URL.test(keys.p256dh) || !B64URL.test(keys.auth) || keys.p256dh.length > 200 || keys.auth.length > 100) return null;
+  return { endpoint, keys: { p256dh: keys.p256dh, auth: keys.auth } };
+}
+async function pushSubscribe(request, env, now) {
+  let body;
+  try { body = await request.json(); } catch { return fail(400, "expected JSON"); }
+  const sub = readSubscription(body);
+  if (!sub) return fail(400, "invalid subscription");
+  await env.DB.prepare("INSERT INTO push_subscriptions (endpoint, keys_json, created_at) VALUES (?, ?, ?) ON CONFLICT(endpoint) DO UPDATE SET keys_json = excluded.keys_json")
+    .bind(sub.endpoint, JSON.stringify(sub.keys), now).run();
+  return json({ ok: true });
+}
+async function pushUnsubscribe(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return fail(400, "expected JSON"); }
+  if (typeof body?.endpoint !== "string") return fail(400, "missing endpoint");
+  await env.DB.prepare("DELETE FROM push_subscriptions WHERE endpoint = ?").bind(body.endpoint).run();
+  return json({ ok: true });
+}
+/** Sends one notice to the calling phone so the person can see notifications work. */
+async function pushTest(request, env) {
+  if (!env.VAPID_PRIVATE_KEY || !env.VAPID_PUBLIC_KEY) return fail(503, "Notifications are not set up on the server yet.");
+  let body;
+  try { body = await request.json(); } catch { return fail(400, "expected JSON"); }
+  const sub = readSubscription(body);
+  if (!sub) return fail(400, "invalid subscription");
+  const status = await webPushSender(env)({ ...sub, expirationTime: null }, { title: "Minimal notifications are on", body: "You will get one note in the evening if a day is not logged.", url: "./" });
+  return status >= 200 && status < 300 ? json({ ok: true }) : fail(502, `The push service answered ${status}.`);
 }

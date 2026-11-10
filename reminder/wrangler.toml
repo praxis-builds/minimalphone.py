@@ -1,0 +1,18 @@
+# The evening reminder Worker (cron). Deploy: npm run deploy:reminder
+# Secrets (set with scripts/setup-push-keys.mjs): VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT
+name = "minimal-reminder"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = false
+
+[triggers]
+crons = ["*/15 * * * *"]
+
+# Logs off: the Worker never writes entries to logs.
+[observability]
+enabled = false
+
+[[d1_databases]]
+binding = "DB"
+database_name = "minimal"
+database_id = "547e3ee2-c3ba-43f3-82cf-abe0be467f1b"

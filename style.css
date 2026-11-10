@@ -480,3 +480,8 @@ button.heat-cell:focus-visible{outline:2px solid var(--text);outline-offset:1px}
 .permanent-card{margin-top:.8rem;padding:2px 6px;background:var(--bg)}
 .retired-title{margin:1.1rem .25rem 0;font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--sage)}
 .settings-page .permanent-card .add-row input{min-height:44px}
+.push-block{margin-top:1.2rem;padding-top:1rem;border-top:1px solid var(--rule);display:grid;gap:.5rem}
+.push-block h3{margin:0;font-family:var(--serif);font-weight:600;font-size:1.15rem}
+.push-status{margin:0;color:var(--text-soft);font-size:.92rem}
+.push-actions{display:flex;flex-wrap:wrap;gap:.5rem}
+input[type="checkbox"],input[type="radio"]{accent-color:var(--accent)}
