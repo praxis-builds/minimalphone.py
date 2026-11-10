@@ -296,3 +296,20 @@ describe("first sync", () => {
     expect(a.state.config.accent).toBe("ice");
   });
 });
+
+describe("weekly review, skip reasons, yearly target", () => {
+  it("a weekly review written on one phone reaches the other", async () => {
+    const cookie = await signIn();
+    const a = phone(cookie, "a"), b = phone(cookie, "b");
+    await a.client.load(); await b.client.load();
+    a.state.days = [day("2026-11-14", [["p1", "Laundry", "done"]], { weekend: true })];
+    await a.client.firstSync(a.get, a.apply);
+    await b.client.firstSync(b.get, b.apply, { fresh: true });
+    await a.edit((s) => { s.config.reviews = { "2026-11-09": { worked: "Early starts", change: "Fewer meetings" } }; s.config.updatedAt = Date.now(); });
+    await a.sync();
+    await b.sync();
+    expect(b.state.config.reviews).toEqual({ "2026-11-09": { worked: "Early starts", change: "Fewer meetings" } });
+    const row = await env.DB.prepare("SELECT value_json FROM records WHERE entity = 'review' AND key = '2026-11-09'").first();
+    expect(JSON.parse(row.value_json).worked).toBe("Early starts");
+  });
+});

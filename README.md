@@ -10,6 +10,7 @@ It is an installable Progressive Web App (PWA) that keeps priorities, Small Move
 
 - Log yesterday, plan today: a day is logged once it is over
 - Saturday and Sunday logged together as one Weekend
+- Weekly review: when you log the Weekend, Minimal shows last week's score (its 6 days) and asks "What worked?" and "One thing to change?"; past reviews are listed in History
 - Dated daily priorities with up to 10 items
 - Up to 10 configurable Small Moves
 - Permanent priorities: a fixed list every new day starts with (Settings → Permanent priorities); retire one to stop it on new days while past days keep it

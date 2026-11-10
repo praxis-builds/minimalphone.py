@@ -261,3 +261,31 @@ describe("permanent priorities", () => {
     assert.deepEqual(day.slice(0, 2).map((p) => p.id), ["perm-plan", "perm-inbox"]);
   });
 });
+
+describe("weekly review", () => {
+  test("a week starts on Monday, and its Weekend belongs to it", () => {
+    assert.equal(L.weekStart("2026-11-14"), "2026-11-09"); // Saturday → Monday
+    assert.equal(L.weekStart("2026-11-15"), "2026-11-09"); // Sunday → Monday
+    assert.equal(L.weekStart("2026-11-09"), "2026-11-09");
+    assert.deepEqual(L.weekBounds("2026-11-11"), { start: "2026-11-09", end: "2026-11-15" });
+  });
+  test("last week's score counts its 6 units, logged ones only", () => {
+    const week = [
+      day("2026-11-09", ["done", "done"]), // 100
+      day("2026-11-10", ["done", "pending"]), // 50
+      day("2026-11-11", ["skipped", "skipped"]), // missed, 0
+      // Thursday not logged
+      day("2026-11-13", ["done", "done", "done", "pending"]), // 75
+      day("2026-11-14", ["done"], { weekend: true }), // Weekend, 100
+    ];
+    const s = L.weekSummary(week, "2026-11-14", at(2026, 11, 16));
+    assert.equal(s.units, 6);
+    assert.equal(s.logged, 5);
+    assert.equal(s.notLogged, 1);
+    assert.equal(s.average, 65); // (100+50+0+75+100)/5
+  });
+  test("on Monday the Weekend can be logged, so the week is complete", () => {
+    assert.equal(L.weekSummary([], "2026-11-14", at(2026, 11, 16)).units, 6);
+    assert.equal(L.weekSummary([], "2026-11-14", at(2026, 11, 15)).units, 5); // Sunday: the Weekend is still open
+  });
+});

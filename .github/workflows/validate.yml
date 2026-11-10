@@ -50,6 +50,7 @@ jobs:
           node tests/rollover.cjs
           node tests/service-worker.cjs
           node tests/permanent.cjs
+          node tests/review.cjs
           npx vitest run
 
       - name: Build the Cloudflare Pages output

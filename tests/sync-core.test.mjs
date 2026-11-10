@@ -57,3 +57,17 @@ test("permanent priorities sync as their own setting and survive a round trip", 
   assert.deepEqual(records.get("setting:permanent").value, permanent);
   assert.deepEqual(implode(records, {}, []).config.permanent, permanent);
 });
+
+test("weekly reviews sync as one record per week", () => {
+  const config = { ...sample.config, reviews: { "2026-11-02": { worked: "Early starts", change: "" }, "2026-11-09": { worked: "", change: "Fewer meetings" } } };
+  const before = explode(config, []);
+  assert.deepEqual(before.get("review:2026-11-09").value, { worked: "", change: "Fewer meetings" });
+  const rebuilt = implode(before, {}, []);
+  assert.deepEqual(rebuilt.config.reviews, config.reviews);
+  // Editing one week is one op; removing a week is a tombstone.
+  const edited = { ...config, reviews: { ...config.reviews, "2026-11-09": { worked: "Walks", change: "Fewer meetings" } } };
+  const ops = diff(before, explode(edited, []), 9);
+  assert.deepEqual(ops.map((o) => o.key), ["2026-11-09"]);
+  const removed = diff(before, explode({ ...config, reviews: { "2026-11-02": config.reviews["2026-11-02"] } }, []), 10);
+  assert.ok(removed.length === 1 && removed[0].deleted && removed[0].entity === "review");
+});

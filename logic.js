@@ -13,6 +13,7 @@
 (function (root) {
   const CONCLUSION_MAX = 500;
   const WEEKEND_CONCLUSION_MAX = 1000;
+  const REVIEW_MAX = 300;
 
   function dateKey(date = new Date()) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -76,6 +77,16 @@
   function weekUnits(k) {
     const offset = (weekday(k) + 6) % 7;
     return unitsBetween(shiftDate(k, -offset), shiftDate(k, 6 - offset));
+  }
+
+  /** Monday of the week that contains k. A weekly review is stored under this date. */
+  function weekStart(k) {
+    return shiftDate(k, -((weekday(k) + 6) % 7));
+  }
+  /** Mon–Sun of a week as {start, end}. */
+  function weekBounds(k) {
+    const start = weekStart(k);
+    return { start, end: shiftDate(start, 6) };
   }
 
   /* Scoring */
@@ -158,6 +169,12 @@
       cursor = prevUnit(cursor);
     }
     return { current, longest };
+  }
+
+  /** The score of the week that contains k: its 6 units, averaged like any period. */
+  function weekSummary(days, k, now = new Date()) {
+    const { start, end } = weekBounds(k);
+    return summarizeUnits(days, start, end, now);
   }
 
   /* Weekend merge */
@@ -269,6 +286,7 @@
   const api = {
     CONCLUSION_MAX,
     WEEKEND_CONCLUSION_MAX,
+    REVIEW_MAX,
     dateKey,
     parseDate,
     shiftDate,
@@ -283,6 +301,9 @@
     canLogUnit,
     unitsBetween,
     weekUnits,
+    weekStart,
+    weekBounds,
+    weekSummary,
     score,
     dayScore,
     isLogged,

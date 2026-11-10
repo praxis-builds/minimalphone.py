@@ -363,6 +363,12 @@ dialog::backdrop{background:rgba(43,36,32,.45);backdrop-filter:blur(3px)}
 .day-view .save-status{margin:.1rem .25rem 0;font-size:.8rem}
 .day-view .active-focus-bar{margin-top:1rem}
 .plan-mode #note-section,.plan-mode #score-line{display:none}
+.review-card{display:grid;gap:.35rem;padding:.8rem 1rem .6rem}
+.review-card label{font-size:.88rem;font-weight:600;color:var(--text-soft)}
+.review-card .note-input{min-height:64px;background:var(--bg);padding:.65rem .8rem}
+.review-card .note-input:disabled{opacity:.75}
+.review-card .save-status{margin:0}
+.plan-mode #review-section{display:none}
 
 /* Item menu (⋯) as a bottom sheet */
 dialog.sheet{margin:auto auto 0;width:min(100vw,560px);max-width:100vw;border:0;border-radius:22px 22px 0 0;background:var(--panel);padding:0}
@@ -485,3 +491,12 @@ button.heat-cell:focus-visible{outline:2px solid var(--text);outline-offset:1px}
 .push-status{margin:0;color:var(--text-soft);font-size:.92rem}
 .push-actions{display:flex;flex-wrap:wrap;gap:.5rem}
 input[type="checkbox"],input[type="radio"]{accent-color:var(--accent)}
+
+/* Weekly reviews in History */
+.review-list{display:grid;gap:.4rem}
+.review-entry{width:100%;display:grid;gap:.3rem;padding:.8rem 1rem;border:0;border-radius:var(--radius);background:var(--panel);color:var(--text);font-weight:400;text-align:left}
+.review-entry-head{display:flex;justify-content:space-between;align-items:baseline;gap:.75rem}
+.review-entry-head strong{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+.review-entry-head span{font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.review-entry-line{font-size:.9rem;line-height:1.45;color:var(--text-soft);overflow-wrap:anywhere}
+.review-entry-line em{font-style:normal;font-weight:600;color:var(--text)}

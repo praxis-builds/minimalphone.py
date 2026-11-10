@@ -5,9 +5,9 @@
 // The app's state ({config, days}) is "exploded" into flat records, one per
 // syncable piece, so that the latest edit wins per item rather than per day:
 //   item:<date>|<priority|planned|move>|<id>   day:<date>   note:<date>
-//   focus:<id>   setting:<name>   registry:<id>
+//   focus:<id>   setting:<name>   registry:<id>   review:<monday of the week>
 
-export const ENTITIES = ["item", "day", "note", "focus", "setting", "registry"];
+export const ENTITIES = ["item", "day", "note", "focus", "setting", "registry", "review"];
 export const ITEM_KINDS = { priorities: "priority", planned: "planned", moves: "move" };
 const KIND_TO_LIST = { priority: "priorities", planned: "planned", move: "moves" };
 // Settings that follow the person across devices. Everything else in config
@@ -67,6 +67,7 @@ export function explode(config, days, { stampZero = false } = {}) {
     put("setting", "profile", { name: config.name || "", initials: config.initials || "", locationLabel: config.locationLabel || "" }, cfgAt);
     for (const name of SYNCED_SETTINGS.slice(1)) if (config[name] !== undefined) put("setting", name, config[name], cfgAt);
     for (const item of config.items || []) put("registry", item.id, item, cfgAt);
+    for (const [week, r] of Object.entries(config.reviews || {})) put("review", week, { worked: r?.worked || "", change: r?.change || "" }, cfgAt);
   }
   for (const day of days || []) {
     const at = day.updatedAt;
@@ -109,13 +110,14 @@ export function implode(records, baseConfig = {}, baseDays = []) {
       }
       return byDate.get(date);
     };
-  const registry = [];
+  const registry = [], reviews = {};
   for (const r of records.values()) {
     if (r.deleted) continue;
     if (r.entity === "setting") {
       if (r.key === "profile") Object.assign(config, { name: r.value?.name || "", initials: r.value?.initials || "", locationLabel: r.value?.locationLabel || "" });
       else if (SYNCED_SETTINGS.includes(r.key)) config[r.key] = r.value;
     } else if (r.entity === "registry") registry.push(r.value);
+    else if (r.entity === "review") reviews[r.key] = { worked: String(r.value?.worked || ""), change: String(r.value?.change || "") };
     else if (r.entity === "day") Object.assign(dayOf(r.key), r.value || {});
     else if (r.entity === "note") dayOf(r.key).conclusion = String(r.value || "");
     else if (r.entity === "focus") dayOf(r.value.date).focusSessions.push(r.value);
@@ -131,6 +133,7 @@ export function implode(records, baseConfig = {}, baseDays = []) {
     }
   }
   if (registry.length || records.size) config.items = registry.sort((a, b) => String(a.id).localeCompare(String(b.id)));
+  if (records.size) config.reviews = reviews;
   const days = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
   for (const d of days) {
     for (const list of Object.values(KIND_TO_LIST)) d[list].sort((a, b) => a.order - b.order || String(a.id).localeCompare(String(b.id))).forEach((x, i) => (x.order = i));
